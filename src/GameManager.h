@@ -1,0 +1,81 @@
+#ifndef __micromachines_gamemanager__
+#define __micromachines_gamemanager__
+
+#include <math.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+// include GLEW to access OpenGL 3.3 functions
+#include <GL/glew.h>
+
+// GLUT is the toolkit to interface with the OS
+#include <GL/freeglut.h>
+
+#include "VSShaderlib.h"
+#include "AVTmathLib.h"
+#include "VertexAttrDef.h"
+#include "basic_geometry.h"
+
+class GameManager {
+	public:
+		GameManager(void);
+		~GameManager(void);
+
+		void init(void);
+		void renderScene(void);
+		void changeSize(int w, int h);
+		void timer();
+		void refresh();
+
+		void processKeys(unsigned char key, int xx, int yy);
+		void processMouseButtons(int button, int state, int xx, int yy);
+		void processMouseMotion(int xx, int yy);
+		void mouseWheel(int wheel, int direction, int x, int y);
+
+		GLuint setupShaders(void);
+
+		int getWinX() { return WinX; }
+		int getWinY() { return WinY; }
+		int getWindowHandle() { return WindowHandle; }
+		void setWindowHandle(int i) { WindowHandle = i; }
+
+	private:
+		unsigned int FrameCount = 0;
+		int WindowHandle = 0;
+		int WinX = 800, WinY = 600;
+
+		VSShaderLib shader;
+		/*
+		struct MyMesh mesh[4];
+		int objId=0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
+		*/
+		GLint pvm_uniformId;
+		GLint vm_uniformId;
+		GLint normal_uniformId;
+		GLint lPos_uniformId;
+			
+		// Camera Position
+		float camX, camY, camZ;
+
+		// Mouse Tracking Variables
+		int startX, startY, tracking = 0;
+
+		// Camera Spherical Coordinates
+		float alpha = 39.0f, beta = 51.0f;
+		float r = 10.0f;
+
+		// Frame counting and FPS computation
+		long myTime,timebase = 0,frame = 0;
+		char s[32];
+		float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
+		/*
+		/// The storage for matrices
+		float mMatrix[COUNT_MATRICES][16];
+		float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
+
+		/// The normal matrix
+		float mNormal3x3[9];*/
+};
+
+#endif

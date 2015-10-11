@@ -88,6 +88,15 @@ class GameManager {
 
 		/// The normal matrix
 		float mNormal3x3[9];*/
+		void createTable(void);
+		void createCar(void);
+		void createOranges(void);
+		void createButterPackets(void);
+
+		void drawTable(void);
+		void drawOranges(void);
+		void drawCar(void);
+		void drawButterPackets(void);
 };
 
 #endif /* __MICROMACHINES_GM__ */

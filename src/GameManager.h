@@ -16,6 +16,10 @@
 #include "AVTmathLib.h"
 #include "VertexAttrDef.h"
 #include "basic_geometry.h"
+#include "Camera.h"
+#include "PerspectiveCamera.h"
+#include "OrthogonalCamera.h"
+#include "DynamicObject.h"
 
 class GameManager {
 	public:
@@ -41,9 +45,14 @@ class GameManager {
 		void setWindowHandle(int i) { WindowHandle = i; }
 
 	private:
-		unsigned int FrameCount = 0;
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
+
+		Camera* _activeCamera;
+		PerspectiveCamera* _perspectiveTop;
+		PerspectiveCamera* _perspectiveBehind;
+		OrthogonalCamera* _orthogonalCamera;
+		std::vector<DynamicObject*> _cars;
 
 		VSShaderLib shader;
 		/*
@@ -66,6 +75,7 @@ class GameManager {
 		float r = 10.0f;
 
 		// Frame counting and FPS computation
+		unsigned int FrameCount = 0;
 		long myTime,timebase = 0,frame = 0;
 		char s[32];
 		float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};

@@ -17,7 +17,11 @@ extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
 /// The normal matrix
 extern float mNormal3x3[9];
 
-GameManager::GameManager(void) {}
+GameManager::GameManager(void) {
+	_perspectiveTop = new PerspectiveCamera();
+	_perspectiveBehind = new PerspectiveCamera();
+	_orthogonalCamera = new OrthogonalCamera();
+}
 
 GameManager::~GameManager(void) {}
 

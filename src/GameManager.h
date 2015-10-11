@@ -1,5 +1,5 @@
-#ifndef __micromachines_gamemanager__
-#define __micromachines_gamemanager__
+#ifndef __MICROMACHINES_GM__
+#define __MICROMACHINES_GM__
 
 #include <math.h>
 #include <iostream>
@@ -78,4 +78,4 @@ class GameManager {
 		float mNormal3x3[9];*/
 };
 
-#endif
+#endif /* __MICROMACHINES_GM__ */

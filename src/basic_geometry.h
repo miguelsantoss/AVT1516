@@ -1,4 +1,10 @@
-#define MAX_TEXTURES 4
+#ifndef __BASIC_GEOMETRY_H__
+#define __BASIC_GEOMETRY_H__
+
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+
+#define MAX_TEXTURES_ 4
 
 struct Material{
 	float diffuse[4];
@@ -12,8 +18,8 @@ struct Material{
 // A model can be made of many meshes. Each is stored  in the following structure
 struct MyMesh {
 		GLuint vao;
-		GLuint texUnits[MAX_TEXTURES];
-		GLuint texTypes[MAX_TEXTURES];
+		GLuint texUnits[MAX_TEXTURES_];
+		GLuint texTypes[MAX_TEXTURES_];
 		float transform[16];
 		int numIndexes;
 		unsigned int type;
@@ -30,3 +36,5 @@ void computeVAO(int numP, float *p, float *pfloatoints, int sides, float smoothC
 void create (float *p, int numP, int sides, int closed, float smoothCos);
 int revSmoothNormal2(float *p, float *nx, float *ny, float smoothCos, int beginEnd);
 float *circularProfile(float minAngle, float maxAngle, float radius, int divisions, float transX= 0.0f, float transY = 0.0f);
+
+#endif

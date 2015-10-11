@@ -9,6 +9,7 @@ class Orange  : public DynamicObject {
 		Orange();
 		~Orange();
 		void draw();
+		float* Orange::boxLimits();
 };
 
 #endif /* __ORANGE_H__ */

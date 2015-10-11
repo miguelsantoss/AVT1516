@@ -8,6 +8,7 @@ class Car: public DynamicObject {
 		Car();
 		~Car();
 		void draw();
+		float* boxLimits();
 };
 
 #endif /* __CAR_H__ */

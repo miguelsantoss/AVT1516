@@ -52,9 +52,11 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
-		std::vector<DynamicObject*> _cars;
 
 		VSShaderLib shader;
+
+		std::vector<GameObject*> test;
+
 		/*
 		struct MyMesh mesh[4];
 		int objId=0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh

@@ -6,7 +6,6 @@
 
 
 class DynamicObject : public GameObject{
-	
 	protected: 
 		Vector3 _speed;
 		float _time;
@@ -15,7 +14,7 @@ class DynamicObject : public GameObject{
 	public:
 		DynamicObject();
 		~DynamicObject();
-    virtual void draw(){};
+		virtual void draw(){};
 		void update(double delta_t);
 		void setSpeed(const Vector3 &speed);
 		void setSpeed(double x, double y, double z);

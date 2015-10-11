@@ -2,6 +2,11 @@
 #include <GL/freeglut.h>
 
 #include "GameManager.h"
+#include "Car.h"
+#include "Orange.h"
+#include "Table.h"
+#include "ButterPacket.h"
+
 #define CAPTION "MicroMachines"
 
 struct MyMesh mesh[4];
@@ -38,59 +43,63 @@ void GameManager::init(void)
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camY = r *   						     sin(beta * 3.14f / 180.0f);
 
-	
-	float amb[]= {0.2f, 0.15f, 0.1f, 1.0f};
-	float diff[] = {0.8f, 0.6f, 0.4f, 1.0f};
-	float spec[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float emissive[] = {0.0f, 0.0f, 0.0f, 1.0f};
-	float shininess= 100.0f;
+	test.push_back(new Car());
+	test.push_back(new Orange());
+	test.push_back(new Table());
+	test.push_back(new ButterPacket());
+
+	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
+	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 100.0f;
 	int texcount = 0;
 
 	// create geometry and VAO of the pawn
-	objId=0;
-	memcpy(mesh[objId].mat.ambient, amb,4*sizeof(float));
-	memcpy(mesh[objId].mat.diffuse, diff,4*sizeof(float));
-	memcpy(mesh[objId].mat.specular, spec,4*sizeof(float));
-	memcpy(mesh[objId].mat.emissive, emissive,4*sizeof(float));
+	objId = 0;
+	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createPawn();
 
-	
+
 	// create geometry and VAO of the sphere
-	objId=1;
-	memcpy(mesh[objId].mat.ambient, amb,4*sizeof(float));
-	memcpy(mesh[objId].mat.diffuse, diff,4*sizeof(float));
-	memcpy(mesh[objId].mat.specular, spec,4*sizeof(float));
-	memcpy(mesh[objId].mat.emissive, emissive,4*sizeof(float));
+	objId = 1;
+	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createSphere(1.0f, 20);
 
-	float amb1[]= {0.3f, 0.0f, 0.0f, 1.0f};
-	float diff1[] = {0.8f, 0.1f, 0.1f, 1.0f};
-	float spec1[] = {0.9f, 0.9f, 0.9f, 1.0f};
-	shininess=500.0;
+	float amb1[] = { 0.3f, 0.0f, 0.0f, 1.0f };
+	float diff1[] = { 0.8f, 0.1f, 0.1f, 1.0f };
+	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+	shininess = 500.0;
 
 	// create geometry and VAO of the cylinder
-	objId=2;
-	memcpy(mesh[objId].mat.ambient, amb1,4*sizeof(float));
-	memcpy(mesh[objId].mat.diffuse, diff1,4*sizeof(float));
-	memcpy(mesh[objId].mat.specular, spec1,4*sizeof(float));
-	memcpy(mesh[objId].mat.emissive, emissive,4*sizeof(float));
+	objId = 2;
+	memcpy(mesh[objId].mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createCylinder(1.5f,0.5f,20);
+	createCylinder(1.5f, 0.5f, 20);
 
 	// create geometry and VAO of the 
-	objId=3;
-	memcpy(mesh[objId].mat.ambient, amb1,4*sizeof(float));
-	memcpy(mesh[objId].mat.diffuse, diff1,4*sizeof(float));
-	memcpy(mesh[objId].mat.specular, spec1,4*sizeof(float));
-	memcpy(mesh[objId].mat.emissive, emissive,4*sizeof(float));
+	objId = 3;
+	memcpy(mesh[objId].mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec1, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createCone(1.5f,0.5f, 20);
+	createCone(1.5f, 0.5f, 20);
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
@@ -108,7 +117,6 @@ void GameManager::init(void)
 
 void GameManager::renderScene(void)
 {
-
 	GLint loc;
 
 	FrameCount++;
@@ -123,11 +131,11 @@ void GameManager::renderScene(void)
 
 	//send the light position in eye coordinates
 
-		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
+	//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 
-		float res[4];
-		multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
-		glUniform4fv(lPos_uniformId, 1, res);
+	float res[4];
+	multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
+	glUniform4fv(lPos_uniformId, 1, res);
 
 	objId=0;
 	for (int i = 0 ; i < 2; ++i) {
@@ -219,6 +227,13 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			break;
 		case 'm': glEnable(GL_MULTISAMPLE); break;
 		case 'n': glDisable(GL_MULTISAMPLE); break;
+		case 'q': printf("forward\n"); break; //Forward movement
+		case 'a': printf("backwards|stop\n"); break; //backwards|stop movement
+		case 'o': printf("left\n"); break; //steer left
+		case 'p': printf("right\n"); break; //right left
+		case '1': printf("camera 1"); break; //change to camera 1
+		case '2': printf("camera 2"); break; //change to camera 2
+		case '3': printf("camera 3"); break; //change to camera 3
 	}
 }
 

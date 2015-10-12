@@ -20,6 +20,7 @@
 #include "PerspectiveCamera.h"
 #include "OrthogonalCamera.h"
 #include "DynamicObject.h"
+#include "Car.h"
 
 class GameManager {
 	public:
@@ -48,6 +49,7 @@ class GameManager {
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
 
+		Car* _car;
 		Camera* _activeCamera;
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;

@@ -6,6 +6,7 @@
 class Car: public DynamicObject {
 	public:
 		Car();
+		Car(const Vector3& pos);
 		~Car();
 		void draw();
 		float* boxLimits();

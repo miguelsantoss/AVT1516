@@ -13,11 +13,7 @@ void DynamicObject::setTime(float time) {
 	_time = time;
 }
 
-float DynamicObject::getTime() {
-	return _time;
-}
-
-void DynamicObject::setSpeed(double x, double y, double z) {
+void DynamicObject::setSpeed(float x, float y, float z) {
 	_speed.set(x, y, z);
 }
 
@@ -25,19 +21,19 @@ void DynamicObject::setSpeed(const Vector3 &speed) {
 	_speed.set(speed.getX(), speed.getY(), speed.getZ());
 }
 
+void DynamicObject::setAcceleration(float x, float y, float z) {
+	_acceleration.set(x, y, z);
+}
+
+void DynamicObject::setAcceleration(const Vector3 &acceleration) {
+	_acceleration.set(acceleration.getX(), acceleration.getY(), acceleration.getZ());
+}
+
 void DynamicObject::update(double delta_t) {
 		if(getTime() > 0) return;
-		Vector3 *position = Entity::getPosition();
+		Vector3 position = this->getPosition();
 
-		Entity::setPosition(position->getX() + delta_t * _speed.getX(), position->getY() + delta_t * _speed.getY(), position->getZ() + delta_t * _speed.getZ());
-}
-
-Vector3 DynamicObject::getSpeed() {
-	return _speed;
-}
-
-Vector3 DynamicObject::getDirection() {
-	return _direction;
+		Entity::setPosition(position.getX() + delta_t * _speed.getX(), position.getY() + delta_t * _speed.getY(), position.getZ() + delta_t * _speed.getZ());
 }
 
 void DynamicObject::setDirection(float x, float y, float z) {

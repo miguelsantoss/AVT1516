@@ -6,14 +6,14 @@
 
 class Entity {
 	protected:
-		Vector3* _position;
+		Vector3 _position;
 	public:
 		Entity();
 		virtual ~Entity();
 		
-		Vector3* getPosition();
-		Vector3* setPosition(double x, double y, double z);
-		Vector3* setPosition(Vector3* position);
+		const Vector3& getPosition() const { return _position; }
+		void setPosition(float x, float y, float z);
+		void setPosition(const Vector3& position);
 };
 
 #endif /* __ENTITY_H__ */

@@ -45,6 +45,8 @@ void GameManager::init(void)
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camY = r *   						     sin(beta * 3.14f / 180.0f);
 
+	_car = new Car(Vector3(3.10f, 1.15f, -5.05f));
+
 	createTable();
 	createButterPackets();
 	createOranges();
@@ -136,6 +138,7 @@ void GameManager::refresh()
 
 void GameManager::processKeys(unsigned char key, int xx, int yy)
 {
+	Vector3 a = _car->getPosition();
 	switch(key) {
 
 		case 27:
@@ -147,7 +150,10 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			break;
 		case 'm': glEnable(GL_MULTISAMPLE); break;
 		case 'n': glDisable(GL_MULTISAMPLE); break;
-		case 'q': printf("forward\n"); break; //Forward movement
+		case 'q': 
+			a.setX(a.getX() + 1.0f);
+			_car->setPosition(a);
+			break;
 		case 'a': printf("backwards|stop\n"); break; //backwards|stop movement
 		case 'o': printf("left\n"); break; //steer left
 		case 'p': printf("right\n"); break; //right left
@@ -410,8 +416,8 @@ void GameManager::drawTable(void) {
 			popMatrix(MODEL);
 		}
 	}
-	for (double i = -4.5; i < 4.5; i++) {
-		for (double j = -4.5; j < 4.5; j++) {
+	for (float i = -4.5; i < 4.5; i++) {
+		for (float j = -4.5; j < 4.5; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -440,7 +446,7 @@ void GameManager::drawTable(void) {
 		}
 	}
 	objId = TABLE_BLUE_SQUARE;
-	for (double i = -4.5; i < 4.5; i++) {
+	for (float i = -4.5; i < 4.5; i++) {
 		for (int j = -5; j < 5; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
@@ -470,7 +476,7 @@ void GameManager::drawTable(void) {
 		}
 	}
 	for (int i = -5; i < 5; i++) {
-		for (double j = -4.5; j < 4.5; j++) {
+		for (float j = -4.5; j < 4.5; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -503,7 +509,8 @@ void GameManager::drawTable(void) {
 void GameManager::drawCar(void) {
 	GLint loc;
 	objId = CAR_BODY;
-	float translatef[] = { 3.10f, 1.15f, -5.05f };
+	Vector3 a = _car->getPosition();
+	float translatef[] = { a.getX(), a.getY(), a.getZ() };
 	float scalef = 0.15f;
 	float rotatef[] = { 90.0f, 1.0, 0.0, 0.0f };
 	float wheel_r[] = { 0.0f, 0.35f };
@@ -518,7 +525,7 @@ void GameManager::drawCar(void) {
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 	glUniform1f(loc, mesh[objId].mat.shininess);
 	pushMatrix(MODEL);
-	translate(MODEL, 3.0f, 1.15f, -5.0f);
+	translate(MODEL, a.getX() - 0.1f, a.getY(), a.getZ() + 0.05f);
 	scale(MODEL, 0.5f, 0.5f, 0.5f);
 	scale(MODEL, 1.2f, 0.5f, 0.7f);
 

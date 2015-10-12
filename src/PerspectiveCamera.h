@@ -6,13 +6,13 @@
 
 class PerspectiveCamera: public Camera {
 	private:
-		double _fov;
-		double _aspect;
-		double _ratio;
+		float _fov;
+		float _aspect;
+		float _ratio;
 	public:
-		PerspectiveCamera();
+		PerspectiveCamera(float fov, float ratio, float dnear, float dfar);
 		~PerspectiveCamera();
-		void update(double fov, double ratio, double aspect, double cnear, double cfar);
+		void update(float posX, float posY, float posZ, float eyeX, float eyeY, float eyeZ, float upX, float upY, float upZ);
 		void computeProjectionMatrix();
 		void computeVisualizationMatrix(double eyeX, double eyeY, double eyeZ, double targetX, double targetY, double targetZ, double upX, double upY, double upZ);
 };

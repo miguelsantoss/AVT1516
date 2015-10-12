@@ -12,7 +12,7 @@ const int BUTTER = 3;
 const int CAR_BODY = 4;
 const int CAR_WHEEL = 5;
 
-struct MyMesh mesh[1000];
+struct MyMesh mesh[6];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -25,9 +25,6 @@ extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
 extern float mNormal3x3[9];
 
 GameManager::GameManager(void) {
-	_perspectiveTop = new PerspectiveCamera();
-	_perspectiveBehind = new PerspectiveCamera();
-	_orthogonalCamera = new OrthogonalCamera();
 }
 
 GameManager::~GameManager(void) {}
@@ -40,17 +37,26 @@ GameManager::~GameManager(void) {}
 
 void GameManager::init(void)
 {
+
 	// set the camera position based on its spherical coordinates
 	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camY = r *   						     sin(beta * 3.14f / 180.0f);
 
 	_car = new Car(Vector3(3.10f, 1.15f, -5.05f));
+	_car->setDirection(1.0f, 0.0f, 0.0f);
 
 	createTable();
 	createButterPackets();
 	createOranges();
 	createCar();
+
+	// Cameras
+	_cameraLook = 1;
+	setOrthoCamera(new OrthogonalCamera(-10.0, 10.0, -10.0, 10.0, -10.0, 10.0));
+	setPerspectiveCameraTop(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
+	setPerspectiveCameraBehind(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
+	_activeCamera = _orthogonalCamera;
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
@@ -74,7 +80,30 @@ void GameManager::renderScene(void)
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
 	// set the camera using a function similar to gluLookAt
-	lookAt(camX, camY, camZ, 0,0,0, 0,1,0);
+	//lookAt(camX, camY, camZ, 0,0,0, 0,1,0);
+
+	
+	if (_cameraLook == 1 || _cameraLook == 2) {
+		_activeCamera->computeProjectionMatrix();
+	}
+	/*
+	else if (_cameraLook == 3) {
+		_activeCamera->update(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
+			_car->getPosition().getX() + 5, _car->getPosition().getY(), _car->getPosition().getZ(),
+			0, 1, 0);
+		std::cout << "Camera 3" << std::endl;
+	}*/
+	
+	else { // Camara do carro
+		loadIdentity(PROJECTION);
+		perspective(53.13f, 1.0f, 0.1f, 1000.0f);
+		loadIdentity(VIEW);
+		loadIdentity(MODEL);
+		lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
+			_car->getPosition().getX() + 5 - camX, _car->getPosition().getY() - camY, _car->getPosition().getZ() - camZ,
+			0, 1, 0);
+	}
+
 	// use our shader
 	glUseProgram(shader.getProgramIndex());
 
@@ -157,9 +186,35 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case 'a': printf("backwards|stop\n"); break; //backwards|stop movement
 		case 'o': printf("left\n"); break; //steer left
 		case 'p': printf("right\n"); break; //right left
-		case '1': printf("camera 1"); break; //change to camera 1
-		case '2': printf("camera 2"); break; //change to camera 2
-		case '3': printf("camera 3"); break; //change to camera 3
+		case '1':
+			if (_cameraLook != 1) {
+				_activeCamera = _orthogonalCamera;
+				_cameraLook = 1;
+				_activeCamera->computeProjectionMatrix();
+			}
+			break;
+		case '2':
+			if (_cameraLook != 2) {
+				_activeCamera = _perspectiveTop;
+				_cameraLook = 2;
+				_activeCamera->computeProjectionMatrix();
+			}
+			break;
+		case '3': 
+			if (_cameraLook != 3) {
+				//_activeCamera = _perspectiveBehind;
+				_cameraLook = 3;
+				loadIdentity(PROJECTION);
+				perspective(53.13f, 1.0f, 0.1f, 1000.0f);
+				loadIdentity(VIEW);
+				loadIdentity(MODEL);
+				lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
+					_car->getPosition().getX() + 5, _car->getPosition().getY(), _car->getPosition().getZ(),
+					0, 1, 0);
+			}
+			
+			break;
+			
 	}
 }
 

@@ -13,7 +13,7 @@ class OrthogonalCamera: public Camera {
 		double _ratio; 
 		double _aspect;
 	public:
-		OrthogonalCamera();
+		OrthogonalCamera(double right, double left, double bottom, double top, double dnear, double dfar);
 		
 		~OrthogonalCamera();
 		void update(double right, double left, double bottom, double top, double dnear, double dfar, double ratio, double aspect);

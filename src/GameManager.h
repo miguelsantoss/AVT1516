@@ -45,11 +45,25 @@ class GameManager {
 		int getWindowHandle() { return WindowHandle; }
 		void setWindowHandle(int i) { WindowHandle = i; }
 
+		void setOrthoCamera(OrthogonalCamera* orthogonalCamera) {
+			_orthogonalCamera = orthogonalCamera;
+		}
+
+		void setPerspectiveCameraTop(PerspectiveCamera* perspectiveCamera) {
+			_perspectiveTop = perspectiveCamera;
+		}
+
+		void setPerspectiveCameraBehind(PerspectiveCamera* perspectiveCamera) {
+			_perspectiveBehind = perspectiveCamera;
+		}
+
 	private:
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
 
 		Car* _car;
+
+		int _cameraLook;
 		Camera* _activeCamera;
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;

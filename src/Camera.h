@@ -19,6 +19,7 @@ class Camera: public Entity {
 		Camera();
 		virtual ~Camera();
 		
+		void update(float posX, float posY, float posZ, float eyeX, float eyeY, float eyeZ, float upX, float upY, float upZ) {};
 		virtual void computeProjectionMatrix() = 0;
 		virtual void computeVisualizationMatrix(double eyeX, double eyeY, double eyeZ, double targetX, double targetY, double targetZ, double upX, double upY, double upZ) = 0;
 };

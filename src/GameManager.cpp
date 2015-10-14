@@ -37,6 +37,7 @@ GameManager::~GameManager(void) {}
 
 void GameManager::init(void)
 {
+	_elap = 0;
 
 	// set the camera position based on its spherical coordinates
 	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
@@ -45,6 +46,10 @@ void GameManager::init(void)
 
 	_car = new Car(Vector3(3.10f, 1.15f, -5.05f));
 	_car->setDirection(1.0f, 0.0f, 0.0f);
+
+	_oranges.push_back(new Orange(Vector3(-7.0f, 2.0f, -7.0f)));
+	_oranges.push_back(new Orange(Vector3(2.0f, 2.0f, 2.0f)));
+	_oranges.push_back(new Orange(Vector3(8.0f, 2.0f, 3.0f)));
 
 	createTable();
 	createButterPackets();
@@ -153,8 +158,38 @@ void GameManager::timer()
 	FrameCount = 0;
 }
 
+void GameManager::increaseSpeed()
+{
+	std::vector<Orange*>::iterator to_up;
+	Orange* o;
+	Vector3* pos;
+	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
+		o = static_cast<Orange*>(*to_up);
+		o->increaseSpeed();
+	}
+}
+
+void GameManager::updateOranges() {
+	std::vector<Orange*>::iterator to_up;
+	Orange* o;
+	Vector3* pos;
+	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
+		o = static_cast<Orange*>(*to_up);
+		o->update(_delta_t);
+		if (o->getPosition().getX() > 12.0 || o->getPosition().getX() < -12.0 || o->getPosition().getZ() > 12.0 || o->getPosition().getX() < -12.0) {
+			o->reset(Vector3(rand() % 8,2.0f, rand() % 8), glutGet(GLUT_ELAPSED_TIME));
+		}
+	}
+}
+
 void GameManager::refresh()
 {
+	_elapsed = glutGet(GLUT_ELAPSED_TIME);
+	_delta_t = _elapsed - _elap;
+	_elap = _elapsed;
+
+	_car->update(_delta_t);
+	updateOranges();
 	glutPostRedisplay();
 }
 
@@ -180,12 +215,20 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case 'm': glEnable(GL_MULTISAMPLE); break;
 		case 'n': glDisable(GL_MULTISAMPLE); break;
 		case 'q': 
-			a.setX(a.getX() + 1.0f);
-			_car->setPosition(a);
+			_car->accelerationIncrease();
 			break;
-		case 'a': printf("backwards|stop\n"); break; //backwards|stop movement
-		case 'o': printf("left\n"); break; //steer left
-		case 'p': printf("right\n"); break; //right left
+		case 'a': 
+			printf("backwards|stop\n");
+			_car->accelerationDecrease();
+			break; //backwards|stop movement
+		case 'o': 
+			printf("left\n"); 
+			_car->steerLeft();
+			break; //steer left
+		case 'p': 
+			printf("right\n"); 
+			_car->steerRight();
+			break; //steer right
 		case '1':
 			if (_cameraLook != 1) {
 				_activeCamera = _orthogonalCamera;
@@ -568,6 +611,7 @@ void GameManager::drawCar(void) {
 	float translatef[] = { a.getX(), a.getY(), a.getZ() };
 	float scalef = 0.15f;
 	float rotatef[] = { 90.0f, 1.0, 0.0, 0.0f };
+
 	float wheel_r[] = { 0.0f, 0.35f };
 
 	// send the material
@@ -649,7 +693,7 @@ void GameManager::drawOranges(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		translate(MODEL, x[i], 2.0f,  z[i]);
+		translate(MODEL, _oranges[i]->getPosition().getX(), _oranges[i]->getPosition().getY(), _oranges[i]->getPosition().getZ());
 
 		// send matrices to OGL
 		computeDerivedMatrix(PROJ_VIEW_MODEL);

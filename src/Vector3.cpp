@@ -44,6 +44,53 @@ void Vector3::set(float x, float y, float z) {
 	_z=z;
 }
 
+double Vector3::norm() {
+	return sqrt(_x*_x + _y*_y + _z*_z);
+}
+
+Vector3 Vector3::resize(double r) {
+	if (_x > r) _x = r;
+	if (_y > r) _x = r;
+	if (_z > r) _x = r;
+	return *this;
+}
+
 void Vector3::print() {
 	printf("(%f, %f, %f)\n", _x, _y, _z);
+}
+
+
+Vector3 Vector3::operator=(const Vector3& vec) {
+	_x = vec.getX();
+	_y = vec.getY();
+	_z = vec.getZ();
+	return *this;
+}
+
+Vector3 Vector3::operator*(double num) {
+	_x *= num;
+	_y *= num;
+	_z *= num;
+	return *this;
+}
+
+Vector3 Vector3::operator/(int num) {
+	_x /= num;
+	_y /= num;
+	_z /= num;
+	return *this;
+}
+
+Vector3 Vector3::operator+(const Vector3& vec) {
+	_x += vec.getX();
+	_y += vec.getY();
+	_z += vec.getZ();
+	return *this;
+}
+
+Vector3 Vector3::operator-(const Vector3& vec) {
+	_x -= vec.getX();
+	_y -= vec.getY();
+	_z -= vec.getZ();
+	return *this;
 }

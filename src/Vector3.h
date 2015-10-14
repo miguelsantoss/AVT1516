@@ -2,6 +2,7 @@
 #define __VECTOR3_H__
 
 #include <stdio.h>
+#include <cmath>
 
 class Vector3 {
 	public:
@@ -16,10 +17,13 @@ class Vector3 {
 		void setZ(float x);
 		
 		void set(float x, float y, float z);
-		/*Vector3 operator=(const Vector3 &vec);
-		Vector3 operator*(float num);
+		double norm();
+		Vector3 resize(double r);
+		Vector3 operator=(const Vector3 &vec);
+		Vector3 operator*(double num);
+		Vector3 operator/(int num);
 		Vector3 operator+(const Vector3 &vec);
-		Vector3 operator-(const Vector3 &vec);*/
+		Vector3 operator-(const Vector3 &vec);
 		void print();
 	private:
 		float _x;

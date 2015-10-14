@@ -17,6 +17,11 @@ void timer(int value)
 	glutTimerFunc(1000, timer, 0);
 }
 
+void increaseSpeed(int value)
+{
+	gm->increaseSpeed();
+	glutTimerFunc(100000, increaseSpeed, 0);
+}
 void refresh(int value)
 {
 	gm->refresh();

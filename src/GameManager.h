@@ -21,6 +21,7 @@
 #include "OrthogonalCamera.h"
 #include "DynamicObject.h"
 #include "Car.h"
+#include "Orange.h"
 
 class GameManager {
 	public:
@@ -31,6 +32,8 @@ class GameManager {
 		void renderScene(void);
 		void changeSize(int w, int h);
 		void timer();
+		void increaseSpeed();
+		void updateOranges();
 		void refresh();
 
 		void processKeys(unsigned char key, int xx, int yy);
@@ -61,7 +64,13 @@ class GameManager {
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
 
+		double _elapsed;
+		double _delta_t;
+		double _elap;
+
 		Car* _car;
+
+		std::vector<Orange*> _oranges;
 
 		int _cameraLook;
 		Camera* _activeCamera;
@@ -113,6 +122,8 @@ class GameManager {
 		void drawOranges(void);
 		void drawCar(void);
 		void drawButterPackets(void);
+
+
 };
 
 #endif /* __MICROMACHINES_GM__ */

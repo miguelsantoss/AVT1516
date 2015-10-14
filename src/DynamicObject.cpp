@@ -30,9 +30,11 @@ void DynamicObject::setAcceleration(const Vector3 &acceleration) {
 }
 
 void DynamicObject::update(double delta_t) {
-		if(getTime() > 0) return;
+		//if(getTime() > 0) return;
+		
 		Vector3 position = this->getPosition();
-
+		Vector3 speed = this->getSpeed();
+		this->setSpeed(speed.getX() + delta_t * _acceleration.getX(), speed.getY() + delta_t * _acceleration.getY(), speed.getZ() + delta_t * _acceleration.getZ());
 		Entity::setPosition(position.getX() + delta_t * _speed.getX(), position.getY() + delta_t * _speed.getY(), position.getZ() + delta_t * _speed.getZ());
 }
 

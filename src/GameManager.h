@@ -119,11 +119,13 @@ class GameManager {
 		void createCar(void);
 		void createOranges(void);
 		void createButterPackets(void);
+		void createCheerios(void);
 
 		void drawTable(void);
 		void drawOranges(void);
 		void drawCar(void);
 		void drawButterPackets(void);
+		void drawCheerios(void);
 
 
 };

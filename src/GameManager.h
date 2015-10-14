@@ -36,6 +36,8 @@ class GameManager {
 		void updateOranges();
 		void refresh();
 
+		void keyUp(unsigned char key);
+
 		void processKeys(unsigned char key, int xx, int yy);
 		void processMouseButtons(int button, int state, int xx, int yy);
 		void processMouseMotion(int xx, int yy);

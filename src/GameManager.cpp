@@ -199,6 +199,23 @@ void GameManager::refresh()
 // Events from the Keyboard
 //
 // ------------------------------------------------------------
+void GameManager::keyUp(unsigned char key) {
+
+	//Up
+	if (key == 'q' || key == 'Q') {
+		_car->accelerationStop();
+	}//Down
+	else if (key == 'a' || key == 'A') {
+		_car->accelerationStop();
+	}//Left
+	else if (key == 'o' || key == 'O') {
+		_car->steerStop();
+	}//Right
+	else if (key == 'p' || key == 'P') {
+		_car->steerStop();
+	}
+
+}
 
 void GameManager::processKeys(unsigned char key, int xx, int yy)
 {
@@ -608,12 +625,13 @@ void GameManager::drawCar(void) {
 	GLint loc;
 	objId = CAR_BODY;
 	Vector3 a = _car->getPosition();
+	Vector3 d = _car->getDirection();
 	float translatef[] = { a.getX(), a.getY(), a.getZ() };
 	float scalef = 0.15f;
 	float rotatef[] = { 90.0f, 1.0, 0.0, 0.0f };
 
 	float wheel_r[] = { 0.0f, 0.35f };
-
+	
 	// send the material
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -627,7 +645,6 @@ void GameManager::drawCar(void) {
 	translate(MODEL, a.getX() - 0.1f, a.getY(), a.getZ() + 0.05f);
 	scale(MODEL, 0.5f, 0.5f, 0.5f);
 	scale(MODEL, 1.2f, 0.5f, 0.7f);
-
 	// send matrices to OGL
 	computeDerivedMatrix(PROJ_VIEW_MODEL);
 	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);

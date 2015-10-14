@@ -16,6 +16,7 @@ class Car: public DynamicObject {
 		void draw();
 		void accelerationIncrease();
 		void accelerationDecrease();
+		void accelerationStop();
 		void steerRight();
 		void steerLeft();
 		void steerStop();

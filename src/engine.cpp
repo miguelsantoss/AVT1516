@@ -28,6 +28,7 @@ void refresh(int value)
 	glutTimerFunc(1000 / 60, refresh, 0);
 }
 
+void keyUp(unsigned char key, int x, int y) { gm->keyUp(key);}
 void processKeys(unsigned char key, int xx, int yy) { gm->processKeys(key, xx, yy); }
 void processMouseButtons(int button, int state, int xx, int yy) { gm->processMouseButtons(button, state, xx, yy); }
 void processMouseMotion(int xx, int yy) { gm->processMouseMotion(xx, yy); }
@@ -57,6 +58,7 @@ int main(int argc, char **argv) {
 	//glutIdleFunc(renderScene);
 
 //	Mouse and Keyboard Callbacks
+	glutKeyboardUpFunc(keyUp);
 	glutKeyboardFunc(processKeys);
 	glutMouseFunc(processMouseButtons);
 	glutMotionFunc(processMouseMotion);

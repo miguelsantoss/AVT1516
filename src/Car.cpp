@@ -3,16 +3,20 @@
 Car::Car() {}
 
 Car::Car(const Vector3& pos) {
+	acceleration = 0;
+	speed = 0;
 	acceleration_factor = 0.00002;
 	acceleration_input = 0;
-	steer_angle = 0; 
+	angle = 0;
+	steer_angle = 1; 
 	steer_input = 0;
-	steer_factor = 1;
+	steer_factor = M_PI/4;
 	current_speed = 0;
 	max_speed = 0.06;
 	backwards_friction_factor = 0.004;
 	this->setDirection(1.0, 0.0, 0.0);
 	this->setPosition(pos);
+	
 }
 
 Car::~Car() {}
@@ -20,6 +24,10 @@ void Car::draw() {}
 
 float* Car::boxLimits() {
 	return nullptr;
+}
+
+double Car::getAngle() {
+	return angle;
 }
 
 void Car::accelerationIncrease() {
@@ -33,31 +41,33 @@ void Car::accelerationStop() {
 	acceleration_input = 0;
 }
 void Car::steerLeft() {
-	steer_input = -M_PI/24; //FIXME
+		steer_input = -5; //FIXME
 }
 void Car::steerRight() {
-	steer_input = M_PI/24; //FIXME
+		steer_input = 5; //FIXME
 }
 void Car::steerStop() {
 	steer_input = 0;
 }
 
 void Car::update(double delta_t){
-	//if(getTime() > 0) return;
 	Vector3 direction = this->getDirection();
-	setAcceleration(direction * acceleration_input * acceleration_factor);
-	steer_angle = steer_input * steer_factor;
+	acceleration =  acceleration_input * acceleration_factor;
+
+	if (speed > 0) {
+		steer_angle = steer_input * 0.0174532925;
+		angle = angle - steer_input;
+	}
+	else {
+		steer_angle = -steer_input * 0.0174532925;
+		angle = angle + steer_input;
+	}
 	double x = this->getDirection().getX();
 	double z = this->getDirection().getZ();
-	_direction = Vector3(x * cos(steer_angle) - z * sin(steer_angle), 0.0, x * sin(steer_angle) + z * cos(steer_angle));
-
-	Vector3 speed = this->getSpeed();
-	backwards_friction = Vector3(-speed.getX(), -speed.getY(), -speed.getZ()) * backwards_friction_factor;
-	speed = this->getSpeed();
-	setSpeed(speed + backwards_friction * delta_t);
-
-	speed = this->getSpeed();
-	this->setSpeed(speed.getX() + (delta_t * _acceleration.getX()), speed.getY() + (delta_t * _acceleration.getY()), speed.getZ() + (delta_t * _acceleration.getZ()));
+	setDirection(x * cos(steer_angle) - z * sin(steer_angle), 0.0, x * sin(steer_angle) + z * cos(steer_angle));
+	backwards_friction = -speed * backwards_friction_factor;
+	speed = speed + backwards_friction * delta_t;
+	speed = speed + acceleration* delta_t;
 	Vector3 position = this->getPosition();
-	Entity::setPosition(position.getX() + (delta_t * _speed.getX()), position.getY() + (delta_t * _speed.getY()), position.getZ() + (delta_t * _speed.getZ()));
+	Entity::setPosition(position.getX() + (delta_t * speed * _direction.getX()), position.getY() + (delta_t * speed * _direction.getY()), position.getZ() + (delta_t * speed* _direction.getZ()));
 }

@@ -12,7 +12,7 @@ const int BUTTER = 3;
 const int CAR_BODY = 4;
 const int CAR_WHEEL = 5;
 const int CHEERIO = 6;
-
+int rotation = 0;
 struct MyMesh mesh[7];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
@@ -109,6 +109,9 @@ void GameManager::renderScene(void)
 		lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
 			_car->getPosition().getX() + 5 - camX, _car->getPosition().getY() - camY, _car->getPosition().getZ() - camZ,
 			0, 1, 0);
+		/*lookAt(_car->getPosition().getX() - _car->getDirection().getX()*2, _car->getPosition().getY() + 1, _car->getPosition().getZ() - _car->getDirection().getZ()*2,
+			_car->getPosition().getX(), _car->getPosition().getY()+1, _car->getPosition().getZ(),
+			0, 1, 0);*/
 	}
 
 	// use our shader
@@ -238,15 +241,16 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			_car->accelerationIncrease();
 			break;
 		case 'a': 
-			printf("backwards|stop\n");
+			//printf("backwards|stop\n");
 			_car->accelerationDecrease();
 			break; //backwards|stop movement
 		case 'o': 
-			printf("left\n"); 
+			//printf("left\n"); 
+		
 			_car->steerLeft();
 			break; //steer left
 		case 'p': 
-			printf("right\n"); 
+			//printf("right\n"); 
 			_car->steerRight();
 			break; //steer right
 		case '1':
@@ -646,13 +650,19 @@ void GameManager::drawCar(void) {
 	GLint loc;
 	objId = CAR_BODY;
 	Vector3 a = _car->getPosition();
-	Vector3 d = _car->getDirection();
-	float translatef[] = { a.getX(), a.getY(), a.getZ() };
-	float scalef = 0.15f;
+	double angle = _car->getAngle();
+	float translatef[] = { 0.0, 0.0, 0.0 };
+	float scalef = 0.3f;
 	float rotatef[] = { 90.0f, 1.0, 0.0, 0.0f };
 
-	float wheel_r[] = { 0.0f, 0.35f };
+	float wheel_r[] = { 0.3f, 1.1f };
+	pushMatrix(MODEL);
 	
+	translate(MODEL, a.getX(), a.getY(), a.getZ());
+	scale(MODEL, 0.5f, 0.5f, 0.5f);
+
+	rotate(MODEL, angle, 0, 1, 0);
+	translate(MODEL, -0.7, 0.0, -0.5);
 	// send the material
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -663,9 +673,7 @@ void GameManager::drawCar(void) {
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 	glUniform1f(loc, mesh[objId].mat.shininess);
 	pushMatrix(MODEL);
-	translate(MODEL, a.getX() - 0.1f, a.getY(), a.getZ() + 0.05f);
-	scale(MODEL, 0.5f, 0.5f, 0.5f);
-	scale(MODEL, 1.2f, 0.5f, 0.7f);
+	scale(MODEL, 1.4f, 0.5f, 1.0f);
 	// send matrices to OGL
 	computeDerivedMatrix(PROJ_VIEW_MODEL);
 	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
@@ -692,8 +700,8 @@ void GameManager::drawCar(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		if (i <= 1) translate(MODEL, translatef[0] + wheel_r[i], translatef[1], translatef[2]);
-		else translate(MODEL, translatef[0] + wheel_r[i-2], translatef[1], translatef[2] + 0.45f);
+		if (i <= 1) translate(MODEL, wheel_r[i], 0.15, -0.1);
+		else translate(MODEL, wheel_r[i-2], 0.15, 1.1f);
 		scale(MODEL, scalef, scalef, scalef);
 		rotate(MODEL, rotatef[0], rotatef[1], rotatef[2], rotatef[3]);
 
@@ -711,6 +719,7 @@ void GameManager::drawCar(void) {
 
 		popMatrix(MODEL);
 	}
+	popMatrix(MODEL);
 }
 
 void GameManager::drawOranges(void) {

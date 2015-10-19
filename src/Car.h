@@ -23,11 +23,12 @@ class Car: public DynamicObject {
 		void update(double delta_t) override;
 		float* boxLimits();
 		double getAngle();
+		double getWeelAngle();
 private:
 	double acceleration, speed;
 	double acceleration_input;
 	double acceleration_factor;
-	double steer_angle, steer_input, steer_factor, angle;
+	double steer_angle, steer_input, steer_factor, angle, weel_angle;
 	double current_speed, max_speed;
     double backwards_friction_factor, backwards_friction;
 };

@@ -702,6 +702,9 @@ void GameManager::drawCar(void) {
 		pushMatrix(MODEL);
 		if (i <= 1) translate(MODEL, wheel_r[i], 0.15, -0.1);
 		else translate(MODEL, wheel_r[i-2], 0.15, 1.1f);
+		if (i == 1 || i == 3) {
+			rotate(MODEL, _car->getWeelAngle(), 0.0, 1.0, 0.0);
+		}
 		scale(MODEL, scalef, scalef, scalef);
 		rotate(MODEL, rotatef[0], rotatef[1], rotatef[2], rotatef[3]);
 

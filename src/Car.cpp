@@ -8,6 +8,7 @@ Car::Car(const Vector3& pos) {
 	acceleration_factor = 0.00002;
 	acceleration_input = 0;
 	angle = 0;
+	weel_angle = 0;
 	steer_angle = 1; 
 	steer_input = 0;
 	steer_factor = M_PI/4;
@@ -30,6 +31,10 @@ double Car::getAngle() {
 	return angle;
 }
 
+double Car::getWeelAngle() {
+	return weel_angle;
+}
+
 void Car::accelerationIncrease() {
 	acceleration_input = 1;
 }
@@ -42,12 +47,15 @@ void Car::accelerationStop() {
 }
 void Car::steerLeft() {
 		steer_input = -5; //FIXME
+		weel_angle = 25;
 }
 void Car::steerRight() {
 		steer_input = 5; //FIXME
+		weel_angle = -25;
 }
 void Car::steerStop() {
 	steer_input = 0;
+	weel_angle = 0;
 }
 
 void Car::update(double delta_t){

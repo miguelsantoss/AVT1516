@@ -42,7 +42,7 @@ class GameManager {
 		void processMouseButtons(int button, int state, int xx, int yy);
 		void processMouseMotion(int xx, int yy);
 		void mouseWheel(int wheel, int direction, int x, int y);
-
+		void printDebugCameras(void);
 		GLuint setupShaders(void);
 
 		int getWinX() { return WinX; }

@@ -45,6 +45,8 @@ void GameManager::init(void)
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camY = r *   						     sin(beta * 3.14f / 180.0f);
 
+	camX = camY = camZ = 0;
+
 	_car = new Car(Vector3(-3.10f, 1.15f, -5.85f));
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
@@ -106,12 +108,11 @@ void GameManager::renderScene(void)
 		perspective(53.13f, 1.0f, 0.1f, 1000.0f);
 		loadIdentity(VIEW);
 		loadIdentity(MODEL);
-		lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
-			_car->getPosition().getX() + 5 - camX, _car->getPosition().getY() - camY, _car->getPosition().getZ() - camZ,
-			0, 1, 0);
-		/*lookAt(_car->getPosition().getX() - _car->getDirection().getX()*2, _car->getPosition().getY() + 1, _car->getPosition().getZ() - _car->getDirection().getZ()*2,
-			_car->getPosition().getX(), _car->getPosition().getY()+1, _car->getPosition().getZ(),
-			0, 1, 0);*/
+		Vector3 direction = _car->getDirection();
+		lookAt(_car->getPosition().getX() - 2 * direction.getX(), _car->getPosition().getY() + 1, _car->getPosition().getZ() - 2 * direction.getZ(),
+				_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ(),
+				0, 1, 0);
+		//printDebugCameras();
 	}
 
 	// use our shader
@@ -132,6 +133,16 @@ void GameManager::renderScene(void)
 	drawCheerios();
 
 	glutSwapBuffers();
+}
+
+void GameManager::printDebugCameras(void) {
+	//float angle = _car->getAngle();
+	Vector3 direction = _car->getDirection();
+	//std::cout << "Car's position-> X:" << _car->getPosition().getX() << " Y: " << _car->getPosition().getY() << " Z: " << _car->getPosition().getZ() << std::endl;
+	//std::cout << "Car's direction-> X:" << _car->getDirection().getX() << " Y: " << _car->getDirection().getY() << " Z: " << _car->getDirection().getZ() << std::endl;
+	//std::cout << "Car's angle-> alfa: " << _car->getAngle() << std::endl;
+	//std::cout << "Camera's position-> X:" << _car->getPosition().getX() - 2 * cos(angle) << " Y: " << _car->getPosition().getY() + 1 << " Z: " << _car->getPosition().getZ() -2 * sin(angle) << std::endl;
+	std::cout << "Camera's looking at-> X:" << _car->getPosition().getX() + 5 * direction.getX() - camX << " Y: " << _car->getPosition().getY() - camY << " Z: " << _car->getPosition().getZ() + 5 * direction.getZ() - camZ << std::endl;
 }
 
 // ------------------------------------------------------------
@@ -239,19 +250,22 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case 'n': glDisable(GL_MULTISAMPLE); break;
 		case 'q': 
 			_car->accelerationIncrease();
+			printDebugCameras();
 			break;
 		case 'a': 
 			//printf("backwards|stop\n");
 			_car->accelerationDecrease();
+			printDebugCameras();
 			break; //backwards|stop movement
 		case 'o': 
 			//printf("left\n"); 
-		
 			_car->steerLeft();
+			printDebugCameras();
 			break; //steer left
 		case 'p': 
 			//printf("right\n"); 
 			_car->steerRight();
+			printDebugCameras();
 			break; //steer right
 		case '1':
 			if (_cameraLook != 1) {
@@ -271,13 +285,13 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			if (_cameraLook != 3) {
 				//_activeCamera = _perspectiveBehind;
 				_cameraLook = 3;
-				loadIdentity(PROJECTION);
+				/*loadIdentity(PROJECTION);
 				perspective(53.13f, 1.0f, 0.1f, 1000.0f);
 				loadIdentity(VIEW);
 				loadIdentity(MODEL);
 				lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
 					_car->getPosition().getX() + 5, _car->getPosition().getY(), _car->getPosition().getZ(),
-					0, 1, 0);
+					0, 1, 0);*/
 			}
 			
 			break;

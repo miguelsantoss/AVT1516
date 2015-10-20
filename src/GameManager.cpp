@@ -71,7 +71,7 @@ void GameManager::init(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 }
 
@@ -83,6 +83,11 @@ void GameManager::init(void)
 
 void GameManager::renderScene(void)
 {
+
+	//glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);	 //specifies which material parameters track the current color
+	//glEnable(GL_NORMALIZE);
+	glDisable(GL_LIGHTING);
+
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// load identity matrices
@@ -95,13 +100,6 @@ void GameManager::renderScene(void)
 	if (_cameraLook == 1 || _cameraLook == 2) {
 		_activeCamera->computeProjectionMatrix();
 	}
-	/*
-	else if (_cameraLook == 3) {
-		_activeCamera->update(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
-			_car->getPosition().getX() + 5, _car->getPosition().getY(), _car->getPosition().getZ(),
-			0, 1, 0);
-		std::cout << "Camera 3" << std::endl;
-	}*/
 	
 	else { // Camara do carro
 		loadIdentity(PROJECTION);
@@ -122,9 +120,9 @@ void GameManager::renderScene(void)
 
 	//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 
-	float res[4];
-	multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
-	glUniform4fv(lPos_uniformId, 1, res);
+	//float res[4];
+	//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
+	//glUniform4fv(lPos_uniformId, 1, res);
 
 	drawTable();
 	drawButterPackets();
@@ -132,17 +130,36 @@ void GameManager::renderScene(void)
 	drawCar();
 	drawCheerios();
 
+	//_mainAmbientLight = new DirectionalLightSource(GL_LIGHT0);
+	//_mainAmbientLight->shine();
+
 	glutSwapBuffers();
 }
 
 void GameManager::printDebugCameras(void) {
 	//float angle = _car->getAngle();
-	Vector3 direction = _car->getDirection();
+	//Vector3 direction = _car->getDirection();
 	//std::cout << "Car's position-> X:" << _car->getPosition().getX() << " Y: " << _car->getPosition().getY() << " Z: " << _car->getPosition().getZ() << std::endl;
 	//std::cout << "Car's direction-> X:" << _car->getDirection().getX() << " Y: " << _car->getDirection().getY() << " Z: " << _car->getDirection().getZ() << std::endl;
 	//std::cout << "Car's angle-> alfa: " << _car->getAngle() << std::endl;
 	//std::cout << "Camera's position-> X:" << _car->getPosition().getX() - 2 * cos(angle) << " Y: " << _car->getPosition().getY() + 1 << " Z: " << _car->getPosition().getZ() -2 * sin(angle) << std::endl;
-	std::cout << "Camera's looking at-> X:" << _car->getPosition().getX() + 5 * direction.getX() - camX << " Y: " << _car->getPosition().getY() - camY << " Z: " << _car->getPosition().getZ() + 5 * direction.getZ() - camZ << std::endl;
+	//std::cout << "Camera's looking at-> X:" << _car->getPosition().getX() + 5 * direction.getX() - camX << " Y: " << _car->getPosition().getY() - camY << " Z: " << _car->getPosition().getZ() + 5 * direction.getZ() - camZ << std::endl;
+}
+
+// ------------------------------------------------------------
+//
+// Lights Functions
+//
+// ------------------------------------------------------------
+
+void GameManager::initMainAmbientLight(){
+	GLfloat amb[] = { 0.2f, 0.2f, 0.2f, 1.0 };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);		// Adds low ambient light (dark / night mode)
+
+	_mainAmbientLight->setAmbient(new Vector4(0.25, 0.25, 0.25, 1.0));	// Sets light that comes from all directions to "day mode"
+	_mainAmbientLight->setDiffuse(new Vector4(0.8, 0.8, 0.8, 1.0));	// Diffuse reflection reflects light in all directions
+	_mainAmbientLight->setSpecular(new Vector4(1.0, 1.0, 1.0, 1.0)); 	// Sets the specular color (white)
+	_mainAmbientLight->setDirection(new Vector4(10.0, -10.0, 10.0, 0.0)); // Direction from which the light is shining
 }
 
 // ------------------------------------------------------------
@@ -246,8 +263,6 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case 'c': 
 			printf("Camera Spherical Coordinates (%f, %f, %f)\n", alpha, beta, r);
 			break;
-		case 'm': glEnable(GL_MULTISAMPLE); break;
-		case 'n': glDisable(GL_MULTISAMPLE); break;
 		case 'q': 
 			_car->accelerationIncrease();
 			printDebugCameras();
@@ -283,17 +298,20 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			break;
 		case '3': 
 			if (_cameraLook != 3) {
-				//_activeCamera = _perspectiveBehind;
 				_cameraLook = 3;
-				/*loadIdentity(PROJECTION);
-				perspective(53.13f, 1.0f, 0.1f, 1000.0f);
-				loadIdentity(VIEW);
-				loadIdentity(MODEL);
-				lookAt(_car->getPosition().getX() - 2, _car->getPosition().getY() + 1, _car->getPosition().getZ() + 0.25,
-					_car->getPosition().getX() + 5, _car->getPosition().getY(), _car->getPosition().getZ(),
-					0, 1, 0);*/
 			}
-			
+			break;
+		case 'n':
+			/*if (glIsEnabled(GL_LIGHTING)) {
+				if (_mainAmbientLight->getState()) {
+					_mainAmbientLight->setState(false);
+					glDisable(_mainAmbientLight->getNum());
+				}
+				else {
+					_mainAmbientLight->setState(true);
+					glEnable(_mainAmbientLight->getNum());
+				}
+			}*/
 			break;
 			
 	}

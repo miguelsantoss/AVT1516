@@ -22,6 +22,7 @@
 #include "DynamicObject.h"
 #include "Car.h"
 #include "Orange.h"
+#include "DirectionalLightSource.h"
 
 class GameManager {
 	public:
@@ -49,6 +50,8 @@ class GameManager {
 		int getWinY() { return WinY; }
 		int getWindowHandle() { return WindowHandle; }
 		void setWindowHandle(int i) { WindowHandle = i; }
+
+		void GameManager::initMainAmbientLight();
 
 		void setOrthoCamera(OrthogonalCamera* orthogonalCamera) {
 			_orthogonalCamera = orthogonalCamera;
@@ -79,6 +82,8 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
+
+		DirectionalLightSource* _mainAmbientLight;
 
 		VSShaderLib shader;
 

@@ -62,7 +62,7 @@ void Car::update(double delta_t){
 	Vector3 direction = this->getDirection();
 	acceleration =  acceleration_input * acceleration_factor;
 
-	if (speed > 0) {
+	if (speed >= 0) {
 		steer_angle = steer_input * 0.0174532925;
 		angle = angle - steer_input;
 	}

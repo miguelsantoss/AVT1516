@@ -23,6 +23,7 @@
 #include "Car.h"
 #include "Orange.h"
 #include "DirectionalLightSource.h"
+#include "PointLightSource.h"
 
 class GameManager {
 	public:
@@ -82,7 +83,7 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
-
+		PointLightSource* _light;
 		DirectionalLightSource* _mainAmbientLight;
 
 		VSShaderLib shader;
@@ -112,7 +113,7 @@ class GameManager {
 		unsigned int FrameCount = 0;
 		long myTime,timebase = 0,frame = 0;
 		char s[32];
-		float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
+		//float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
 		/*
 		/// The storage for matrices
 		float mMatrix[COUNT_MATRICES][16];
@@ -132,7 +133,7 @@ class GameManager {
 		void drawButterPackets(void);
 		void drawCheerios(void);
 
-
+		void setUpLights(void);
 };
 
 #endif /* __MICROMACHINES_GM__ */

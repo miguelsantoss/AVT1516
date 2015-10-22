@@ -9,7 +9,7 @@
 
 class PointLightSource : public LightSource {
 public:
-	PointLightSource(GLenum number);
+	PointLightSource();
 	~PointLightSource();
 	void shine();
 };

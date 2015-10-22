@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
 	printf ("Renderer: %s\n", glGetString (GL_RENDERER));
 	printf ("Version: %s\n", glGetString (GL_VERSION));
 	printf ("GLSL: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
-
 	if (!gm->setupShaders())
 		return(1);
 

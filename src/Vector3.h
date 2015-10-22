@@ -25,6 +25,7 @@ class Vector3 {
 		Vector3 operator+(const Vector3 &vec);
 		Vector3 operator-(const Vector3 &vec);
 		void print();
+		float* getArray();
 	private:
 		float _x;
 		float _y;

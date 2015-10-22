@@ -1,8 +1,6 @@
-
-
-
 #ifndef DIRECTIONAL_LIGHTSOURCE_H_
 #define DIRECTIONAL_LIGHTSOURCE_H_
+
 #include "LightSource.h"
 #include <GL/gl.h>
 #include <GL/glu.h>

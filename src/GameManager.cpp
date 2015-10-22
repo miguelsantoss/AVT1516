@@ -12,8 +12,9 @@ const int BUTTER = 3;
 const int CAR_BODY = 4;
 const int CAR_WHEEL = 5;
 const int CHEERIO = 6;
+const int Windows = 7;
 int rotation = 0;
-struct MyMesh mesh[7];
+struct MyMesh mesh[8];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -47,12 +48,22 @@ void GameManager::init(void)
 
 	camX = camY = camZ = 0;
 
-	_car = new Car(Vector3(-3.10f, 1.15f, -5.85f));
+	_car = new Car(Vector3(3.10f, 1.15f, 5.85f));
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
-	_oranges.push_back(new Orange(Vector3(-7.0f, 2.0f, -7.0f)));
-	_oranges.push_back(new Orange(Vector3(2.0f, 2.0f, 2.0f)));
-	_oranges.push_back(new Orange(Vector3(8.0f, 2.0f, 3.0f)));
+	_oranges.push_back(new Orange(Vector3(17.0f, 2.0f, 5.0f)));
+	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
+	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
+
+	_light = new PointLightSource();
+	_light->setAmbient(new Vector4(1.0, 1.0, 1.0, 1.0));
+	_light->setDiffuse(new Vector4(1.0, 1.0, 1.0, 1.0));
+	_light->setSpecular(new Vector4(1.0, 1.0, 1.0, 1.0));
+	_light->setPosition(new Vector4(5.0f, 3.0f, 4.0f, 1.0f));
+	_light->setCutOff(60.0);
+	_light->setExponent(4.0);
+	_light->setState(true);
+	_light->setDirection(new Vector4(0.0f, -3.0f, 0.0f, 1.0f));
 
 	createTable();
 	createButterPackets();
@@ -62,7 +73,7 @@ void GameManager::init(void)
 
 	// Cameras
 	_cameraLook = 1;
-	setOrthoCamera(new OrthogonalCamera(-10.0, 10.0, -10.0, 10.0, -10.0, 10.0));
+	setOrthoCamera(new OrthogonalCamera(0.0, 20.0, 0.0, 20.0, -10.0, 10.0));
 	setPerspectiveCameraTop(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
 	setPerspectiveCameraBehind(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
 	_activeCamera = _orthogonalCamera;
@@ -83,10 +94,8 @@ void GameManager::init(void)
 
 void GameManager::renderScene(void)
 {
-
 	//glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);	 //specifies which material parameters track the current color
 	//glEnable(GL_NORMALIZE);
-	glDisable(GL_LIGHTING);
 
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -123,6 +132,8 @@ void GameManager::renderScene(void)
 	//float res[4];
 	//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
 	//glUniform4fv(lPos_uniformId, 1, res);
+
+	setUpLights();
 
 	drawTable();
 	drawButterPackets();
@@ -210,7 +221,7 @@ void GameManager::updateOranges() {
 	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
 		o = static_cast<Orange*>(*to_up);
 		o->update(_delta_t);
-		if (o->getPosition().getX() > 12.0 || o->getPosition().getX() < -12.0 || o->getPosition().getZ() > 12.0 || o->getPosition().getX() < -12.0) {
+		if (o->getPosition().getX() > 21.0 || o->getPosition().getX() < -1.0 || o->getPosition().getZ() > 21.0 || o->getPosition().getX() < -1.0) {
 			o->reset(Vector3(rand() % 8,2.0f, rand() % 8), glutGet(GLUT_ELAPSED_TIME));
 		}
 	}
@@ -414,7 +425,6 @@ void GameManager::mouseWheel(int wheel, int direction, int x, int y)
 
 GLuint GameManager::setupShaders(void)
 {
-
 	// Shader for models
 	shader.init();
 	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/pointlight.vert");
@@ -422,19 +432,19 @@ GLuint GameManager::setupShaders(void)
 
 	// set semantics for the shader variables
 	glBindFragDataLocation(shader.getProgramIndex(), 0,"colorOut");
-	glBindAttribLocation(shader.getProgramIndex(), VERTEX_COORD_ATTRIB, "position");
-	glBindAttribLocation(shader.getProgramIndex(), NORMAL_ATTRIB, "normal");
-	glBindAttribLocation(shader.getProgramIndex(), TEXTURE_COORD_ATTRIB, "texCoord");
+	glBindAttribLocation(shader.getProgramIndex(), VERTEX_COORD_ATTRIB, "VertexPosition");
+	glBindAttribLocation(shader.getProgramIndex(), NORMAL_ATTRIB, "VertexNormal");
+	//glBindAttribLocation(shader.getProgramIndex(), TEXTURE_COORD_ATTRIB, "texCoord");
 
 	glLinkProgram(shader.getProgramIndex());
 
 	pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
 	vm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_viewModel");
 	normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
-	lPos_uniformId = glGetUniformLocation(shader.getProgramIndex(), "l_pos");
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
-	
+
+	//while (1);
 	return(shader.isProgramValid());
 }
 
@@ -559,8 +569,8 @@ void GameManager::drawTable(void) {
 	GLint loc;
 	objId = TABLE_WHITE_SQUARE;
 
-	for (int i = -5; i <= 5; i++) {
-		for (int j = -5; j <= 5; j++) {
+	for (int i = 0; i <= 10; i++) {
+		for (int j = 0; j <= 10; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -588,8 +598,8 @@ void GameManager::drawTable(void) {
 			popMatrix(MODEL);
 		}
 	}
-	for (float i = -4.5; i <= 4.5; i++) {
-		for (float j = -4.5; j <= 4.5; j++) {
+	for (float i = 0.5; i <= 9.5; i++) {
+		for (float j = 0.5; j <= 9.5; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -618,8 +628,8 @@ void GameManager::drawTable(void) {
 		}
 	}
 	objId = TABLE_BLUE_SQUARE;
-	for (float i = -4.5; i <= 4.5; i++) {
-		for (int j = -5; j <= 5; j++) {
+	for (float i = 0.5; i <= 9.5; i++) {
+		for (int j = 0; j <= 10; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -647,8 +657,8 @@ void GameManager::drawTable(void) {
 			popMatrix(MODEL);
 		}
 	}
-	for (int i = -5; i <= 5; i++) {
-		for (float j = -4.5; j <= 4.5; j++) {
+	for (int i = 0; i <= 10; i++) {
+		for (float j = 0.5; j <= 9.5; j++) {
 			// send the material
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -731,6 +741,7 @@ void GameManager::drawCar(void) {
 		glUniform4fv(loc, 1, mesh[objId].mat.specular);
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
+
 		pushMatrix(MODEL);
 		if (i <= 1) translate(MODEL, wheel_r[i], 0.15, -0.1);
 		else translate(MODEL, wheel_r[i-2], 0.15, 1.1f);
@@ -795,8 +806,8 @@ void GameManager::drawOranges(void) {
 
 void GameManager::drawButterPackets(void) {
 	GLint loc;
-	float x1[] = { -7.0f, -3.0f, 7.0f };
-	float z1[] = { 2.0f, -3.0f, 4.0f };
+	float x1[] = { 2.0f, 13.0f, 18.0f };
+	float z1[] = { 17.0f, 10.0f, 14.0f };
 
 	objId = BUTTER;
 
@@ -847,7 +858,7 @@ void GameManager::drawCheerios() {
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
 			//translate(MODEL, 5.5f - j * 2.7, 1.10f, -7.3f + i * 0.95);
-			translate(MODEL, 5.0f - i * 0.95f, 1.10f, -4.3f - j *2.7f);
+			translate(MODEL, 10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f);
 			scale(MODEL, 0.5f, 0.5f, 0.5f);
 			scale(MODEL, 0.5f, 0.5f, 0.5f);
 
@@ -867,4 +878,41 @@ void GameManager::drawCheerios() {
 			popMatrix(MODEL);
 		}
 	}
+}
+
+void GameManager::setUpLights(void) {
+	GLint loc;
+
+	float res[4];
+	multMatrixPoint(VIEW, _light->getPosition()->getArray(), res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isLocal");
+	glUniform1i(loc, true);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isSpot");
+	glUniform1i(loc, false);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isEnabled");
+	glUniform1i(loc, true);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].ambient");
+	glUniform4fv(loc, 1, _light->getAmbient()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].diffuse");
+	glUniform4fv(loc, 1, _light->getDiffuse()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].specular");
+	glUniform4fv(loc, 1, _light->getSpecular()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].position");
+	glUniform3fv(loc, 1, res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].coneDirection");
+	glUniform3fv(loc, 1, _light->getDirection()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].coneDirection");
+	glUniform3fv(loc, 1, _light->getDirection()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].spotCosCutoff");
+	glUniform1f(loc, _light->getCutOff());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].spotExponent");
+	glUniform1f(loc, _light->getExponent());
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].constantAttenuation");
+	glUniform1f(loc, 1.2f);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].linearAttenuation");
+	glUniform1f(loc, 0.03f);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].quadraticAttenuation");
+	glUniform1f(loc, 0.0009f);
 }

@@ -6,8 +6,8 @@
 
 #include <list>
 
-PointLightSource::PointLightSource(GLenum number) {
-	_num = number;
+PointLightSource::PointLightSource() {
+	_num = 0;
 }
 
 PointLightSource::~PointLightSource() {

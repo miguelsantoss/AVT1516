@@ -10,6 +10,7 @@ class Vector4: public Vector3 {
 		~Vector4();
 		float getW();
 		void set(float in_x, float in_y, float in_z, float in_w);
+		float* getArray();
 		/*Vector4 operator=(const Vector4 & in_vec);
 		Vector4 operator*(float in_num);
 		Vector4 operator+(const Vector4 & in_vec);

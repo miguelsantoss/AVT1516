@@ -94,3 +94,11 @@ Vector3 Vector3::operator-(const Vector3& vec) {
 	_z -= vec.getZ();
 	return *this;
 }
+
+float* Vector3::getArray() {
+	float * f = new float[3];
+	f[0] = this->getX();
+	f[1] = this->getY();
+	f[2] = this->getZ();
+	return f;
+}

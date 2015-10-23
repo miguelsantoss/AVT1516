@@ -69,7 +69,9 @@ class GameManager {
 	private:
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
-
+		bool _paused = false;
+		bool _gameOver = false;
+		int _vidas = 5;
 		double _elapsed;
 		double _delta_t;
 		double _elap;
@@ -83,6 +85,7 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
+		OrthogonalCamera* _vidasPontosCamera;
 		PointLightSource* _light;
 		DirectionalLightSource* _mainAmbientLight;
 
@@ -134,6 +137,8 @@ class GameManager {
 		void drawCheerios(void);
 
 		void setUpLights(void);
+		void update(double delta_t);
+		void destroyCar();
 };
 
 #endif /* __MICROMACHINES_GM__ */

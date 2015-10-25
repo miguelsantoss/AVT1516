@@ -39,10 +39,14 @@ struct LightProperties {
 const int Maxlights = 9;
 uniform MaterialProperties mat;
 uniform LightProperties lights[Maxlights];
+uniform int usetextures;
+uniform sampler2D texmap1;
+uniform sampler2D texmap2;
 
 in vec3 Normal;
 in vec4 Position;
 in vec3 EyeDirection;
+in vec2 tex_coord;
 
 out vec4 colorOut;
 
@@ -50,6 +54,13 @@ void main() {
 
 	vec4 scatteredLight = vec4(0.0); // or, to a global ambient light
 	vec4 reflectedLight = vec4(0.0);
+	vec4 texel, texel1;
+	texel = texture(texmap2, tex_coord);
+	texel1 = texture(texmap1, tex_coord);
+	vec4 tex = vec4(1.0);
+	if (usetextures == 1) {
+		tex = texel * texel1;
+	}
 	/*vec3 LightContribution = vec3(0.0);
 	vec3 ambient_term = vec3(0.0);
 	vec3 diffuse_term = vec3(0.0);
@@ -106,8 +117,8 @@ void main() {
 		specular = pow(specular, mat.shininess);
 
 		// Accumulate all the lights’ effects
-		scatteredLight += lights[light].ambient * mat.ambient * attenuation + lights[light].diffuse * mat.diffuse * diffuse * attenuation;
-		reflectedLight += lights[light].specular * mat.specular * specular * attenuation;
+		scatteredLight += lights[light].ambient * mat.ambient * attenuation * tex + lights[light].diffuse * mat.diffuse * diffuse * attenuation * tex;
+		reflectedLight += lights[light].specular * mat.specular * specular * attenuation * tex;
 
 		/*ambient_term += lights[light].ambient * mat.ambient;
 		diffuse_term += lights[light].diffuse * mat.diffuse * diffuse;

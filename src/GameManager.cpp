@@ -2,6 +2,7 @@
 #include <GL/freeglut.h>
 
 #include "GameManager.h"
+#include "TGA.h"
 
 #define CAPTION "MicroMachines"
 
@@ -71,6 +72,10 @@ void GameManager::init(void)
 	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
 
+	glGenTextures(2, TextureArray);
+	TGA_Texture(TextureArray, "stone.tga", 0);
+	TGA_Texture(TextureArray, "lightwood.tga", 1);
+
 	createLights();
 	createTable();
 	createButterPackets();
@@ -90,7 +95,7 @@ void GameManager::init(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
-	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	objId = VIDA;
 	float amb[] = { 1.0f,0.0f,0.0f,1.0f };
@@ -158,7 +163,17 @@ void GameManager::renderScene(void)
 
 	setUpLights();
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[0]);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[1]);
+
+	glUniform1i(tex_loc_1, 0);
+	glUniform1i(tex_loc_2, 1);
+	glUniform1i(texUse, 1);
 	drawTable();
+	glUniform1i(texUse, 0);
 	drawButterPackets();
 	drawOranges();
 	drawCar();
@@ -651,6 +666,10 @@ GLuint GameManager::setupShaders(void)
 	pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
 	vm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_viewModel");
 	normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
+	tex_loc_1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
+	tex_loc_2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
+	texUse = glGetUniformLocation(shader.getProgramIndex(), "usetextures");
+	
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 

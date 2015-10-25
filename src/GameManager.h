@@ -83,6 +83,10 @@ class GameManager {
 		GLint vm_uniformId;
 		GLint normal_uniformId;
 		GLint lPos_uniformId;
+		GLint tex_loc_1, tex_loc_2;
+		GLint texUse;
+
+		GLuint TextureArray[2];
 			
 		// Camera Position
 		float camX, camY, camZ;

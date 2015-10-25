@@ -31,7 +31,7 @@ void PerspectiveCamera::computeProjectionMatrix() {
 	perspective(_fov, _ratio, _near, _far);
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
-	lookAt(2, 3, 2,
+	lookAt(-5, 10, -5,
 		10, 0, 10,
 		1, 0, 1);
 }

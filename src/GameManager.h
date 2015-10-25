@@ -34,9 +34,8 @@ class GameManager {
 		void renderScene(void);
 		void changeSize(int w, int h);
 		void timer();
-		void increaseSpeed();
-		void updateOranges();
 		void refresh();
+		void increaseSpeed(void);
 
 		void keyUp(unsigned char key);
 
@@ -51,20 +50,6 @@ class GameManager {
 		int getWinY() { return WinY; }
 		int getWindowHandle() { return WindowHandle; }
 		void setWindowHandle(int i) { WindowHandle = i; }
-
-		void GameManager::initMainAmbientLight();
-
-		void setOrthoCamera(OrthogonalCamera* orthogonalCamera) {
-			_orthogonalCamera = orthogonalCamera;
-		}
-
-		void setPerspectiveCameraTop(PerspectiveCamera* perspectiveCamera) {
-			_perspectiveTop = perspectiveCamera;
-		}
-
-		void setPerspectiveCameraBehind(PerspectiveCamera* perspectiveCamera) {
-			_perspectiveBehind = perspectiveCamera;
-		}
 
 	private:
 		int WindowHandle = 0;
@@ -86,13 +71,10 @@ class GameManager {
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
 		OrthogonalCamera* _vidasPontosCamera;
-		PointLightSource* _light;
-		DirectionalLightSource* _mainAmbientLight;
+
+		std::vector<LightSource*> _lights;
 
 		VSShaderLib shader;
-
-		std::vector<GameObject*> test;
-
 		/*
 		struct MyMesh mesh[4];
 		int objId=0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
@@ -138,7 +120,10 @@ class GameManager {
 
 		void setUpLights(void);
 		void update(double delta_t);
-		void destroyCar();
+		void destroyCar(void);
+		void createLights(void);
+		void updateOranges(void);
+		void update_car_headlights(void);
 };
 
 #endif /* __MICROMACHINES_GM__ */

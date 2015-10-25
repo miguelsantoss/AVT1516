@@ -14,6 +14,6 @@ out vec3 EyeDirection;
 void main () {
 	Normal = normalize(m_normal * VertexNormal);
 	Position = m_viewModel * VertexPosition;
-	EyeDirection = vec3(-Position);
-	gl_Position = m_pvm * VertexPosition;	
-}
+	EyeDirection = normalize(vec3(-Position));
+	gl_Position = m_pvm * VertexPosition;
+};

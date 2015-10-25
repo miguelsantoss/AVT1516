@@ -19,24 +19,12 @@ void LightSource::setState(bool state) {
 	_state = state;
 }
 
-GLenum LightSource::getNum() {
-	return _num;
-}
-
 void LightSource::setPosition(Vector4 *position) {
 	_position = position;
 }
 
 void LightSource::setDirection(Vector4 *direction) {
 	_direction = direction;
-}
-
-void LightSource::setCutOff(double cutoff) {
-	_cut_off = cutoff;
-}
-
-void LightSource::setExponent(double exponent) {
-	_exponent = exponent;
 }
 
 void LightSource::setAmbient(Vector4 *ambient) {

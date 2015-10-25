@@ -21,11 +21,12 @@ struct LightProperties {
 	vec4 diffuse;
 	vec4 specular;
 
-	vec3 position;				// location of light, if is Local is true,
+	vec3 position_point;
+	vec4 direction;
+	vec4 position;				// location of light, if is Local is true,
 								// otherwise the direction toward the light
 
 	vec3 halfVector;			// direction of highlights for directional light
-	vec3 coneDirection;			// spotlight attributes
 
 	float spotCosCutoff;
 	float spotExponent;
@@ -35,7 +36,7 @@ struct LightProperties {
 	float quadraticAttenuation;
 };
 
-const int Maxlights = 1;
+const int Maxlights = 9;
 uniform MaterialProperties mat;
 uniform LightProperties lights[Maxlights];
 
@@ -61,8 +62,13 @@ void main() {
 			continue;
 
 		vec3 halfVector;
-		vec3 lightDirection = lights[light].position;
-
+		vec3 lightDirection;
+		if (lights[light].isSpot) {
+			lightDirection  = vec3(lights[light].position);
+		}
+		else {
+			lightDirection = lights[light].position_point;
+		}
 		float attenuation = 1.0;
 		// for local lights, compute per-fragment direction,
 		// halfVector, and attenuation
@@ -77,7 +83,7 @@ void main() {
 								+ lights[light].quadraticAttenuation * lightDistance
 								* lightDistance);
 			if (lights[light].isSpot) {
-				float spotCos = dot(lightDirection, -lights[light].coneDirection);
+				float spotCos = dot(lightDirection, normalize(vec3(-lights[light].direction)));
 
 				if (spotCos < lights[light].spotCosCutoff)
 					attenuation = 0.0;
@@ -88,7 +94,8 @@ void main() {
 			halfVector = normalize(lightDirection + EyeDirection);
 		}
 		else {
-			halfVector = lights[light].halfVector;
+			lightDirection = normalize(vec3(-lights[light].direction));
+			halfVector = normalize(lightDirection + EyeDirection / 2);
 		}
 
 		float diffuse = max(0.0, dot(Normal, lightDirection));
@@ -105,10 +112,9 @@ void main() {
 		/*ambient_term += lights[light].ambient * mat.ambient;
 		diffuse_term += lights[light].diffuse * mat.diffuse * diffuse;
 		specular_term += lights[light].specular * mat.specular * specular;
-
 		LightContribution += attenuation * (ambient_term + diffuse_term + specular_term); */
 	}
-	vec4 rgb = mat.emissive + scatteredLight + reflectedLight;
+	vec4 rgb = min(mat.emissive + scatteredLight + reflectedLight, vec4(1.0));
 	colorOut = rgb;
 	//colorOut = Color;
 }

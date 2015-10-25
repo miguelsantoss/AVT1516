@@ -7,10 +7,12 @@
 #include <GL/glut.h>
 
 class DirectionalLightSource : public LightSource {
-public:
-	DirectionalLightSource(GLenum number);
-	~DirectionalLightSource();
-	void shine();
+	public:
+		DirectionalLightSource(int number);
+		~DirectionalLightSource();
+		void data();
+	private:
+		int _num;
 };
 
 #endif 

@@ -17,6 +17,18 @@ const int CAR_HEADLIGHT = 8;
 const int CAR_TAILIGHT = 9;
 const int VIDA = 10;
 
+
+const int AMBIENT_LIGHT = 0;
+const int CANDLE_0 = 1;
+const int CANDLE_1 = 2;
+const int CANDLE_2 = 3;
+const int CANDLE_3 = 4;
+const int CANDLE_4 = 5;
+const int CANDLE_5 = 6;
+const int CAR_HEADLIGHT_LEFT = 7;
+const int CAR_HEADLIGHT_RIGHT = 8;
+
+
 int rotation = 0;
 struct MyMesh mesh[11];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
@@ -52,23 +64,14 @@ void GameManager::init(void)
 
 	camX = camY = camZ = 0;
 
-	_car = new Car(Vector3(3.10f, 1.15f, 5.85f));
+	_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
 	_oranges.push_back(new Orange(Vector3(17.0f, 2.0f, 5.0f)));
 	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
 
-	_light = new PointLightSource();
-	_light->setAmbient(new Vector4(1.0, 1.0, 1.0, 1.0));
-	_light->setDiffuse(new Vector4(1.0, 1.0, 1.0, 1.0));
-	_light->setSpecular(new Vector4(1.0, 1.0, 1.0, 1.0));
-	_light->setPosition(new Vector4(5.0f, 3.0f, 4.0f, 1.0f));
-	_light->setCutOff(60.0);
-	_light->setExponent(4.0);
-	_light->setState(true);
-	_light->setDirection(new Vector4(0.0f, -3.0f, 0.0f, 1.0f));
-
+	createLights();
 	createTable();
 	createButterPackets();
 	createOranges();
@@ -77,9 +80,9 @@ void GameManager::init(void)
 
 	// Cameras
 	_cameraLook = 1;
-	setOrthoCamera(new OrthogonalCamera(0.0, 20.0, 0.0, 20.0, -10.0, 10.0));
-	setPerspectiveCameraTop(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
-	setPerspectiveCameraBehind(new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f));
+	_orthogonalCamera = new OrthogonalCamera(0.0, 20.0, 0.0, 20.0, -10.0, 10.0);
+	_perspectiveTop = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
+	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_vidasPontosCamera = new OrthogonalCamera(0.0, 20.0, 0.0, 20.0, -10.0, 10.0);
 	_activeCamera = _orthogonalCamera;
 
@@ -243,14 +246,121 @@ void GameManager::printDebugCameras(void) {
 //
 // ------------------------------------------------------------
 
-void GameManager::initMainAmbientLight(){
-	GLfloat amb[] = { 0.2f, 0.2f, 0.2f, 1.0 };
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);		// Adds low ambient light (dark / night mode)
+void GameManager::createLights(void) {
+	Vector4* ambient_candle = new Vector4(1.0f, 0.57f, 0.16f, 1.0f);
+	//(1.0f0.77f, 0.46f, 1.0f)
+	Vector4* diffuse_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4* specular_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	_mainAmbientLight->setAmbient(new Vector4(0.25, 0.25, 0.25, 1.0));	// Sets light that comes from all directions to "day mode"
-	_mainAmbientLight->setDiffuse(new Vector4(0.8, 0.8, 0.8, 1.0));	// Diffuse reflection reflects light in all directions
-	_mainAmbientLight->setSpecular(new Vector4(1.0, 1.0, 1.0, 1.0)); 	// Sets the specular color (white)
-	_mainAmbientLight->setDirection(new Vector4(10.0, -10.0, 10.0, 0.0)); // Direction from which the light is shining
+	Vector4* ambient_headlight = new Vector4(0.78f, 0.88f, 1.0f, 1.0f);
+	Vector4* diffuse_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4* specular_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	Vector3 car_posistion = _car->getPosition();
+	Vector3 car_direction = _car->getDirection();
+
+	DirectionalLightSource* ambient = new DirectionalLightSource(AMBIENT_LIGHT);
+	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(new Vector4(4.0f, 1.5f, 6.0f, 1.0f));
+	PointLightSource* candle_1 = new PointLightSource(CANDLE_1); candle_1->setPosition(new Vector4(15.0f, 1.5f, 3.0f, 1.0f));
+	PointLightSource* candle_2 = new PointLightSource(CANDLE_2); candle_2->setPosition(new Vector4(15.0f, 1.5f, 10.0f, 1.0f));
+	PointLightSource* candle_3 = new PointLightSource(CANDLE_3); candle_3->setPosition(new Vector4(5.0f, 1.5f, 10.0f, 1.0f));
+	PointLightSource* candle_4 = new PointLightSource(CANDLE_4); candle_4->setPosition(new Vector4(5.0f, 1.5f, 18.0f, 1.0f));
+	PointLightSource* candle_5 = new PointLightSource(CANDLE_5); candle_5->setPosition(new Vector4(15.0f, 1.5f, 18.0f, 1.0f));
+	PointLightSource* car_headlight_left = new PointLightSource(CAR_HEADLIGHT_LEFT);
+	PointLightSource* car_headlight_right = new PointLightSource(CAR_HEADLIGHT_RIGHT);
+
+	_lights.push_back(ambient);
+	_lights.push_back(candle_0);
+	_lights.push_back(candle_1);
+	_lights.push_back(candle_2);
+	_lights.push_back(candle_3);
+	_lights.push_back(candle_4);
+	_lights.push_back(candle_5);
+	_lights.push_back(car_headlight_left);
+	_lights.push_back(car_headlight_right);
+
+	ambient->setPosition(new Vector4(1.0f, -1.0f, 0.0f, 0.0f));
+
+	ambient->setAmbient(new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
+	ambient->setDiffuse(new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
+	ambient->setSpecular(new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
+	ambient->setState(false);
+	ambient->setIsLocal(false);
+
+	int k = 1;
+	for (int i = 1; i < 4; i++) {
+		for (int j = 1; j < 3; j++) {
+			PointLightSource* candle = dynamic_cast<PointLightSource*>(_lights[k]);
+			candle->setAmbient(ambient_candle);
+			candle->setDiffuse(diffuse_candle);
+			candle->setSpecular(specular_candle);
+
+			candle->setState(true);
+			candle->setIsSpot(false);
+			candle->setIsLocal(true);
+
+			candle->setConstantAttenuation(0.01);
+			candle->setLinearAttenuation(0);
+			candle->setQuadraticAttenuation(1);
+
+			k++;
+		}
+	}
+
+	car_headlight_left->setAmbient(ambient_headlight);
+	car_headlight_left->setDiffuse(diffuse_headlight);
+	car_headlight_left->setSpecular(specular_headlight);
+	car_headlight_right->setAmbient(ambient_headlight);
+	car_headlight_right->setDiffuse(diffuse_headlight);
+	car_headlight_right->setSpecular(specular_headlight);
+
+	car_headlight_left->setIsLocal(true);
+	car_headlight_left->setIsSpot(true);
+	car_headlight_left->setState(true);
+	car_headlight_right->setIsLocal(true);
+	car_headlight_right->setIsSpot(true);
+	car_headlight_right->setState(true);
+
+	car_headlight_left->setConstantAttenuation(0.01);
+	car_headlight_left->setLinearAttenuation(0);
+	car_headlight_left->setQuadraticAttenuation(0.1);
+	car_headlight_right->setConstantAttenuation(0.01);
+	car_headlight_right->setLinearAttenuation(0);
+	car_headlight_right->setQuadraticAttenuation(0.1);
+
+
+	Vector3 car_pos = _car->getPosition();
+	Vector4* spot_position_left = new Vector4(car_pos.getX() + 0.55f, car_pos.getY(), car_pos.getZ() - 0.15f, 1.0f);
+	Vector4* spot_position_right = new Vector4(car_pos.getX() + 0.55f, car_pos.getY(), car_pos.getZ() + 0.15f, 1.0f);
+	Vector4* spot_direction = new Vector4(2.0f, -1.0f, 0.0f, 0.0f);
+	
+	car_headlight_left->setCutOff(70.0f);
+	car_headlight_left->setExponent(4.0f);
+	car_headlight_right->setCutOff(70.0f);
+	car_headlight_right->setExponent(4.0f);
+	update_car_headlights();
+
+}
+
+void GameManager::update_car_headlights(void) {
+	Vector3 car_pos = _car->getPosition();
+	Vector3 car_dir = _car->getDirection();
+	float angle = _car->getAngle();
+
+	float newXleft = 0.55f * cos(angle * 3.14f / 180.0f) + sin(angle * 3.14f / 180.0f) * (-0.15f) + car_pos.getX();
+	float newZleft = -sin(angle * 3.14f / 180.0f) * 0.55f + cos(angle * 3.14f / 180.0f) * (-0.15f) + car_pos.getZ();
+
+	float newXright = 0.55f * cos(angle * 3.14f / 180.0f) + sin(angle * 3.14f / 180.0f) * 0.15f + car_pos.getX();
+	float newZright = -sin(angle * 3.14f / 180.0f) * 0.55f + cos(angle * 3.14f / 180.0f) * 0.15f + car_pos.getZ();
+
+	Vector4* spot_position_left = new Vector4(newXleft, car_pos.getY(), newZleft, 1.0f);
+	Vector4* spot_position_right = new Vector4(newXright, car_pos.getY(), newZright, 1.0f);
+	Vector4* spot_direction = new Vector4(car_dir.getX(), -1.0f, car_dir.getZ(), 0.0f);
+
+	_lights[CAR_HEADLIGHT_LEFT]->setPosition(spot_position_left);
+	_lights[CAR_HEADLIGHT_LEFT]->setDirection(spot_direction);
+	_lights[CAR_HEADLIGHT_RIGHT]->setPosition(spot_position_right);
+	_lights[CAR_HEADLIGHT_RIGHT]->setDirection(spot_direction);
 }
 
 // ------------------------------------------------------------
@@ -326,6 +436,8 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
+
+	update_car_headlights();
 	updateOranges();
 	glutPostRedisplay();
 }
@@ -363,7 +475,7 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			glutLeaveMainLoop();
 			break;
 
-		case 'c': 
+		case 'd': 
 			printf("Camera Spherical Coordinates (%f, %f, %f)\n", alpha, beta, r);
 			break;
 		case 'q': 
@@ -408,16 +520,19 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			}
 			break;
 		case 'n':
-			/*if (glIsEnabled(GL_LIGHTING)) {
-				if (_mainAmbientLight->getState()) {
-					_mainAmbientLight->setState(false);
-					glDisable(_mainAmbientLight->getNum());
-				}
-				else {
-					_mainAmbientLight->setState(true);
-					glEnable(_mainAmbientLight->getNum());
-				}
-			}*/
+			_lights[AMBIENT_LIGHT]->setState(!_lights[AMBIENT_LIGHT]->getState());
+			break;
+		case 'c':
+			_lights[CANDLE_0]->setState(!_lights[CANDLE_0]->getState());
+			_lights[CANDLE_1]->setState(!_lights[CANDLE_1]->getState());
+			_lights[CANDLE_2]->setState(!_lights[CANDLE_2]->getState());
+			_lights[CANDLE_3]->setState(!_lights[CANDLE_3]->getState());
+			_lights[CANDLE_4]->setState(!_lights[CANDLE_4]->getState());
+			_lights[CANDLE_5]->setState(!_lights[CANDLE_5]->getState());
+			break;
+		case 'h':
+			_lights[CAR_HEADLIGHT_LEFT]->setState(!_lights[CAR_HEADLIGHT_LEFT]->getState());
+			_lights[CAR_HEADLIGHT_RIGHT]->setState(!_lights[CAR_HEADLIGHT_RIGHT]->getState());
 			break;
 			
 	}
@@ -872,8 +987,8 @@ void GameManager::drawCar(void) {
 	glBindVertexArray(0);
 
 	pushMatrix(MODEL);
-	translate(MODEL, 0.15, 1.1, 0.15);
-	scale(MODEL, 0.7f, 0.45f, 0.7f);
+	translate(MODEL, 0.13f, 1.55f, 0.13f);
+	scale(MODEL, 0.74f, 0.05f, 0.74f);
 
 	// send matrices to OGL
 	computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -1219,35 +1334,138 @@ void GameManager::setUpLights(void) {
 	GLint loc;
 
 	float res[4];
-	multMatrixPoint(VIEW, _light->getPosition()->getArray(), res);
+	multMatrixPoint(VIEW, _lights[0]->getPosition()->getArray(), res);
 
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isLocal");
-	glUniform1i(loc, true);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isSpot");
-	glUniform1i(loc, false);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isEnabled");
-	glUniform1i(loc, true);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].direction");
+	glUniform4fv(loc, 1, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].ambient");
-	glUniform4fv(loc, 1, _light->getAmbient()->getArray());
+	glUniform4fv(loc, 1, _lights[0]->getAmbient()->getArray());
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].diffuse");
-	glUniform4fv(loc, 1, _light->getDiffuse()->getArray());
+	glUniform4fv(loc, 1, _lights[0]->getDiffuse()->getArray());
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].specular");
-	glUniform4fv(loc, 1, _light->getSpecular()->getArray());
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].position");
-	glUniform3fv(loc, 1, res);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].coneDirection");
-	glUniform3fv(loc, 1, _light->getDirection()->getArray());
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].coneDirection");
-	glUniform3fv(loc, 1, _light->getDirection()->getArray());
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].spotCosCutoff");
-	glUniform1f(loc, _light->getCutOff());
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].spotExponent");
-	glUniform1f(loc, _light->getExponent());
+	glUniform4fv(loc, 1, _lights[0]->getSpecular()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isEnabled");
+	glUniform1i(loc, _lights[0]->getState());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isLocal");
+	glUniform1i(loc, _lights[0]->getIsLocal());
 
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].constantAttenuation");
-	glUniform1f(loc, 1.2f);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].linearAttenuation");
-	glUniform1f(loc, 0.03f);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].quadraticAttenuation");
-	glUniform1f(loc, 0.0009f);
+
+	std::string beg = "lights[";
+	std::string end = "].";
+	std::string types[] = { "isLocal", "isSpot", "isEnabled", "ambient", "diffuse", "specular", "position_point",
+		"constantAttenuation", "linearAttenuation", "quadraticAttenuation" };
+	std::string fin = "";
+
+	for (int i = 1; i < 7; i++) {
+		PointLightSource* light = dynamic_cast<PointLightSource*>(_lights[i]);
+		fin = beg + std::to_string(i) + end + types[0];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1i(loc, light->getIsLocal());
+
+		fin = beg + std::to_string(i) + end + types[1];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1i(loc, light->getIsSpot());
+
+		fin = beg + std::to_string(i) + end + types[2];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1i(loc, light->getState());
+
+		fin = beg + std::to_string(i) + end + types[3];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform4fv(loc, 1, light->getAmbient()->getArray());
+
+		fin = beg + std::to_string(i) + end + types[4];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform4fv(loc, 1, light->getDiffuse()->getArray());
+
+		fin = beg + std::to_string(i) + end + types[5];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform4fv(loc, 1, light->getSpecular()->getArray());
+
+		multMatrixPoint(VIEW, light->getPosition()->getArray(), res);
+		fin = beg + std::to_string(i) + end + types[6];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform3fv(loc, 1, res);
+
+		fin = beg + std::to_string(i) + end + types[7];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1f(loc, light->getConstantAttenuation());
+		fin = beg + std::to_string(i) + end + types[8];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1f(loc, light->getLinearAttenuation());
+		fin = beg + std::to_string(i) + end + types[9];
+		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
+		glUniform1f(loc, light->getQuadraticAttenuation());
+	}
+
+
+	PointLightSource* car_headlight_left = dynamic_cast<PointLightSource*>(_lights[CAR_HEADLIGHT_LEFT]);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].isEnabled");
+	glUniform1i(loc, car_headlight_left->getState());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].isLocal");
+	glUniform1i(loc, car_headlight_left->getIsLocal());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].isSpot");
+	glUniform1i(loc, car_headlight_left->getIsSpot());
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].ambient");
+	glUniform4fv(loc, 1, car_headlight_left->getAmbient()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].diffuse");
+	glUniform4fv(loc, 1, car_headlight_left->getDiffuse()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].specular");
+	glUniform4fv(loc, 1, car_headlight_left->getSpecular()->getArray());
+
+	multMatrixPoint(VIEW, car_headlight_left->getPosition()->getArray(), res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].position");
+	glUniform4fv(loc, 1, res);
+	multMatrixPoint(VIEW, car_headlight_left->getDirection()->getArray(), res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].direction");
+	glUniform4fv(loc, 1, res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].spotCosCutoff");
+	glUniform1f(loc, cos(car_headlight_left->getCutOff()));
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].spotExponent");
+	glUniform1f(loc, car_headlight_left->getExponent());
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].constantAttenuation");
+	glUniform1f(loc, car_headlight_left->getConstantAttenuation());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].linearAttenuation");
+	glUniform1f(loc, car_headlight_left->getLinearAttenuation());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].quadraticAttenuation");
+	glUniform1f(loc, car_headlight_left->getQuadraticAttenuation());
+
+
+
+	PointLightSource* car_headlight_right = dynamic_cast<PointLightSource*>(_lights[CAR_HEADLIGHT_RIGHT]);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].isEnabled");
+	glUniform1i(loc, car_headlight_right->getState());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].isLocal");
+	glUniform1i(loc, car_headlight_right->getIsLocal());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].isSpot");
+	glUniform1i(loc, car_headlight_right->getIsSpot());
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].ambient");
+	glUniform4fv(loc, 1, car_headlight_right->getAmbient()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].diffuse");
+	glUniform4fv(loc, 1, car_headlight_right->getDiffuse()->getArray());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].specular");
+	glUniform4fv(loc, 1, car_headlight_right->getSpecular()->getArray());
+
+	multMatrixPoint(VIEW, car_headlight_right->getPosition()->getArray(), res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].position");
+	glUniform4fv(loc, 1, res);
+	multMatrixPoint(VIEW, car_headlight_right->getDirection()->getArray(), res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].direction");
+	glUniform4fv(loc, 1, res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].spotCosCutoff");
+	glUniform1f(loc, cos(car_headlight_right->getCutOff()));
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].spotExponent");
+	glUniform1f(loc, car_headlight_right->getExponent());
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].constantAttenuation");
+	glUniform1f(loc, car_headlight_right->getConstantAttenuation());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].linearAttenuation");
+	glUniform1f(loc, car_headlight_right->getLinearAttenuation());
+	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].quadraticAttenuation");
+	glUniform1f(loc, car_headlight_right->getQuadraticAttenuation());
 }

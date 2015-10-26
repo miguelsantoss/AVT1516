@@ -5,6 +5,7 @@
 #include "TGA.h"
 
 #define CAPTION "MicroMachines"
+#define ORANGE_RADIUS 1.0f
 
 const int TABLE_WHITE_SQUARE = 0;
 const int TABLE_BLUE_SQUARE = 1;
@@ -71,6 +72,13 @@ void GameManager::init(void)
 	_oranges.push_back(new Orange(Vector3(17.0f, 2.0f, 5.0f)));
 	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
+
+	std::cout << "laranja1" << std::endl;
+	std::cout << "x: " << _oranges[0]->getDirection().getX() << " y: " << _oranges[0]->getDirection().getY() << " z: " << _oranges[0]->getDirection().getZ() << std::endl;
+	std::cout << "laranja2" << std::endl;
+	std::cout << "x: " << _oranges[1]->getDirection().getX() << " y: " << _oranges[1]->getDirection().getY() << " z: " << _oranges[1]->getDirection().getZ() << std::endl;
+	std::cout << "laranja3" << std::endl;
+	std::cout << "x: " << _oranges[2]->getDirection().getX() << " y: " << _oranges[2]->getDirection().getY() << " z: " << _oranges[2]->getDirection().getZ() << std::endl;
 
 	glGenTextures(2, TextureArray);
 	TGA_Texture(TextureArray, "stone.tga", 0);
@@ -173,9 +181,11 @@ void GameManager::renderScene(void)
 	glUniform1i(tex_loc_2, 1);
 	glUniform1i(texUse, 1);
 	drawTable();
+	glUniform1i(tex_loc_1, 1);
+	drawOranges();
+	
 	glUniform1i(texUse, 0);
 	drawButterPackets();
-	drawOranges();
 	drawCar();
 	drawCheerios();
 
@@ -426,7 +436,7 @@ void GameManager::updateOranges() {
 	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
 		o = static_cast<Orange*>(*to_up);
 		o->update(_delta_t);
-		if (o->getPosition().getX() > 21.0 || o->getPosition().getX() < -1.0 || o->getPosition().getZ() > 21.0 || o->getPosition().getX() < -1.0) {
+		if (o->getPosition().getX() > 21.0 || o->getPosition().getX() < 0.0 || o->getPosition().getZ() > 21.0 || o->getPosition().getZ() < 0.0) {
 			o->reset(Vector3(rand() % 8,2.0f, rand() % 8), glutGet(GLUT_ELAPSED_TIME));
 		}
 	}
@@ -803,7 +813,7 @@ void GameManager::createOranges(void) {
 	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createSphere(1.0f, 20);
+	createSphere(ORANGE_RADIUS, 20);
 }
 
 void GameManager::createButterPackets(void) {
@@ -1243,8 +1253,18 @@ void GameManager::drawOranges(void) {
 	float z[] = { -7.0f, 2.0f, 3.0f };
 
 	objId = ORANGE;
+	float circumference = 2 * 3.14f * ORANGE_RADIUS;
+	float angle;
 
 	for (int i = 0; i < 3; i++) {
+		angle = _oranges[i]->getAngle();
+		angle += _oranges[i]->getDistanceDone() / circumference * 360;
+		//std::cout << "test: " << angle << std::endl;
+		_oranges[i]->setAngle(angle);
+		float normalized = _oranges[i]->getSpeed().getX() * _oranges[i]->getSpeed().getX() + _oranges[i]->getSpeed().getZ() * _oranges[i]->getSpeed().getZ();
+		normalized = sqrt(normalized);
+		Vector3 normalized_speed = Vector3(_oranges[i]->getSpeed().getX() / normalized, 0.0f, _oranges[i]->getSpeed().getZ() / normalized);
+		Vector3 rotation = Vector3(normalized_speed.getZ(), 0.0f, -normalized_speed.getX());
 		// send the material
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -1256,7 +1276,7 @@ void GameManager::drawOranges(void) {
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
 		translate(MODEL, _oranges[i]->getPosition().getX(), _oranges[i]->getPosition().getY(), _oranges[i]->getPosition().getZ());
-
+		rotate(MODEL, angle, rotation.getX(), rotation.getY(), rotation.getZ());
 		// send matrices to OGL
 		computeDerivedMatrix(PROJ_VIEW_MODEL);
 		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);

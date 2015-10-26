@@ -15,8 +15,13 @@ class Orange  : public DynamicObject {
 		void reset(const Vector3& pos, double elapsed);
 		float* Orange::boxLimits();
 		void increaseSpeed();
+		float getAngle() { return _angle; }
+		void setAngle(float angle) { _angle = angle; }
+		
 private:
 	int interval;
+	float _angle;
+	
 };
 
 #endif /* __ORANGE_H__ */

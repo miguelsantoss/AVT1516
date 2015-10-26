@@ -11,6 +11,8 @@ class DynamicObject : public GameObject{
 		float _time;
 		Vector3 _direction;
 		Vector3 _acceleration;
+		float _distanceDone;
+		Vector3 _previousPosition;
 
 	public:
 		DynamicObject();
@@ -28,8 +30,11 @@ class DynamicObject : public GameObject{
 		virtual float* boxLimits() = 0;
 
 		const Vector3& getDirection() const { return _direction; }
+		const Vector3& getPreviousPosition() const { return _previousPosition; }
 		const Vector3& getSpeed() const { return _speed; }
 		const Vector3& getAcceleration() const { return _acceleration; }
+		void setDistanceDone(float distanceDone) { _distanceDone = distanceDone; }
+		float getDistanceDone() { return _distanceDone; }
 		const float getTime() const { return _time; }
 };
 

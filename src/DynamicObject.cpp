@@ -5,6 +5,7 @@
 
 DynamicObject::DynamicObject() {
 	_time = 0;
+	_distanceDone = 0;
 }
 
 DynamicObject::~DynamicObject() {}
@@ -34,8 +35,12 @@ void DynamicObject::update(double delta_t) {
 		
 		Vector3 position = this->getPosition();
 		Vector3 speed = this->getSpeed();
+		_previousPosition.setX(position.getX());
+		_previousPosition.setY(position.getY());
+		_previousPosition.setZ(position.getZ());
 		this->setSpeed(speed.getX() + delta_t * _acceleration.getX(), speed.getY() + delta_t * _acceleration.getY(), speed.getZ() + delta_t * _acceleration.getZ());
 		Entity::setPosition(position.getX() + delta_t * _speed.getX(), position.getY() + delta_t * _speed.getY(), position.getZ() + delta_t * _speed.getZ());
+		_distanceDone = delta_t * abs(_speed.getX()) + delta_t * abs(_speed.getZ());
 }
 
 void DynamicObject::setDirection(float x, float y, float z) {

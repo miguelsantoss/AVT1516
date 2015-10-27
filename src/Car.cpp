@@ -1,4 +1,5 @@
 #include "Car.h"
+#include <iostream>
 
 Car::Car() {}
 
@@ -7,7 +8,7 @@ Car::Car(const Vector3& pos) {
 	speed = 0;
 	acceleration_factor = 0.00002;
 	acceleration_input = 0;
-	angle = 0;
+	_angle = 0;
 	weel_angle = 0;
 	steer_angle = 1; 
 	steer_input = 0;
@@ -28,7 +29,7 @@ float* Car::boxLimits() {
 }
 
 double Car::getAngle() {
-	return angle;
+	return _angle;
 }
 
 double Car::getWeelAngle() {
@@ -64,11 +65,11 @@ void Car::update(double delta_t){
 
 	if (speed >= 0) {
 		steer_angle = steer_input * 0.0174532925;
-		angle = angle - steer_input;
+		_angle = _angle - steer_input;
 	}
 	else {
 		steer_angle = -steer_input * 0.0174532925;
-		angle = angle + steer_input;
+		_angle = _angle + steer_input;
 	}
 	double x = this->getDirection().getX();
 	double z = this->getDirection().getZ();
@@ -77,5 +78,15 @@ void Car::update(double delta_t){
 	speed = speed + backwards_friction * delta_t;
 	speed = speed + acceleration* delta_t;
 	Vector3 position = this->getPosition();
+	Vector3* lastposition = new Vector3(position.getX(), position.getY(), position.getZ());
 	Entity::setPosition(position.getX() + (delta_t * speed * _direction.getX()), position.getY() + (delta_t * speed * _direction.getY()), position.getZ() + (delta_t * speed* _direction.getZ()));
+	float newx, newy, newz;
+	position = this->getPosition();
+	newx = position.getX() - lastposition->getX();
+	newx *= newx;
+	newy = position.getY() - lastposition->getY();
+	newy *= newy;
+	newz = position.getZ() - lastposition->getZ();
+	newz *= newz;
+	this->setDistanceDone(sqrt(newx + newy + newz));
 }

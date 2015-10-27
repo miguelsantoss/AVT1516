@@ -19,5 +19,6 @@ class OrthogonalCamera: public Camera {
 		void update(double right, double left, double bottom, double top, double dnear, double dfar, double ratio, double aspect);
 		void computeProjectionMatrix();
 		void computeVisualizationMatrix(double eyeX, double eyeY, double eyeZ, double targetX, double targetY, double targetZ, double upX, double upY, double upZ);
+		void computeProjection();
 };
 #endif /* __ORTHOGONALCAMERA_H__ */

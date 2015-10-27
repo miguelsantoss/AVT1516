@@ -40,3 +40,13 @@ void OrthogonalCamera::computeVisualizationMatrix(double eyeX, double eyeY, doub
     /*glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();*/
 }
+
+void OrthogonalCamera::computeProjection() {
+	loadIdentity(PROJECTION);
+	ortho(_right, _left, _bottom, _top, _near, _far);
+	loadIdentity(VIEW);
+	loadIdentity(MODEL);
+	/*lookAt(0, 5, 0,
+	0, 0, 0,
+	1, 0, 0);*/
+}

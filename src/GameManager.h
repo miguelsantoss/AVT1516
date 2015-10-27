@@ -56,7 +56,8 @@ class GameManager {
 		int WinX = 800, WinY = 600;
 		bool _paused = false;
 		bool _gameOver = false;
-		int _vidas = 5;
+		int _lifes = 5;
+		int _score = 0;
 		double _elapsed;
 		double _delta_t;
 		double _elap;
@@ -70,7 +71,7 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
-		OrthogonalCamera* _vidasPontosCamera;
+		OrthogonalCamera* _scoreCamera;
 
 		std::vector<LightSource*> _lights;
 
@@ -84,10 +85,16 @@ class GameManager {
 		GLint normal_uniformId;
 		GLint lPos_uniformId;
 		GLint tex_loc_1, tex_loc_2;
-		GLint texUse;
+		GLint texUse, useLights;
+		GLint writeMode;
+		GLint vWriteMode;
 
-		GLuint TextureArray[2];
-			
+		GLuint TextureArray[3];
+		GLuint _vaoID;
+
+		GLuint _texCoordBuffer;
+		GLuint _vertexBuffer;
+		float _fontSize;
 		// Camera Position
 		float camX, camY, camZ;
 
@@ -128,6 +135,9 @@ class GameManager {
 		void createLights(void);
 		void updateOranges(void);
 		void update_car_headlights(void);
+		void initTextureMappedFont();
+		void DrawString(float x, float y, const std::string& str);
+		void restartGame();
 };
 
 #endif /* __MICROMACHINES_GM__ */

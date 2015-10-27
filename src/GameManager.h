@@ -122,12 +122,14 @@ class GameManager {
 		void createOranges(void);
 		void createButterPackets(void);
 		void createCheerios(void);
+		void createCandleSticks(void);
 
 		void drawTable(void);
 		void drawOranges(void);
 		void drawCar(void);
 		void drawButterPackets(void);
 		void drawCheerios(void);
+		void drawCandleSticks(void);
 
 		void setUpLights(void);
 		void update(double delta_t);

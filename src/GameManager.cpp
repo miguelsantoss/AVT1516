@@ -18,8 +18,7 @@ const int CHEERIO = 6;
 const int Windows = 7;
 const int CAR_HEADLIGHT = 8;
 const int CAR_TAILIGHT = 9;
-const int VIDA = 10;
-
+const int CANDLE_STICK = 10;
 
 const int AMBIENT_LIGHT = 0;
 const int CANDLE_0 = 1;
@@ -88,6 +87,7 @@ void GameManager::init(void)
 	createOranges();
 	createCar();
 	createCheerios();
+	createCandleSticks();
 	initTextureMappedFont();
 
 	// Cameras
@@ -203,6 +203,7 @@ void GameManager::renderScene(void)
 	drawButterPackets();
 	drawCar();
 	drawCheerios();
+	drawCandleSticks();
 	glUniform1i(useLights, 0);
 	glUniform1i(writeMode, 1);
 	glUniform1i(vWriteMode, 1);
@@ -261,12 +262,12 @@ void GameManager::createLights(void) {
 	Vector3 car_direction = _car->getDirection();
 
 	DirectionalLightSource* ambient = new DirectionalLightSource(AMBIENT_LIGHT);
-	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(new Vector4(4.0f, 1.5f, 6.0f, 1.0f));
-	PointLightSource* candle_1 = new PointLightSource(CANDLE_1); candle_1->setPosition(new Vector4(15.0f, 1.5f, 3.0f, 1.0f));
-	PointLightSource* candle_2 = new PointLightSource(CANDLE_2); candle_2->setPosition(new Vector4(15.0f, 1.5f, 10.0f, 1.0f));
-	PointLightSource* candle_3 = new PointLightSource(CANDLE_3); candle_3->setPosition(new Vector4(5.0f, 1.5f, 10.0f, 1.0f));
-	PointLightSource* candle_4 = new PointLightSource(CANDLE_4); candle_4->setPosition(new Vector4(5.0f, 1.5f, 18.0f, 1.0f));
-	PointLightSource* candle_5 = new PointLightSource(CANDLE_5); candle_5->setPosition(new Vector4(15.0f, 1.5f, 18.0f, 1.0f));
+	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(new Vector4(4.0f, 2.0f, 6.0f, 1.0f));
+	PointLightSource* candle_1 = new PointLightSource(CANDLE_1); candle_1->setPosition(new Vector4(15.0f, 2.0f, 3.0f, 1.0f));
+	PointLightSource* candle_2 = new PointLightSource(CANDLE_2); candle_2->setPosition(new Vector4(15.0f, 2.0f, 10.0f, 1.0f));
+	PointLightSource* candle_3 = new PointLightSource(CANDLE_3); candle_3->setPosition(new Vector4(5.0f, 2.0f, 10.0f, 1.0f));
+	PointLightSource* candle_4 = new PointLightSource(CANDLE_4); candle_4->setPosition(new Vector4(5.0f, 2.0f, 18.0f, 1.0f));
+	PointLightSource* candle_5 = new PointLightSource(CANDLE_5); candle_5->setPosition(new Vector4(15.0f, 2.0f, 18.0f, 1.0f));
 	PointLightSource* car_headlight_left = new PointLightSource(CAR_HEADLIGHT_LEFT);
 	PointLightSource* car_headlight_right = new PointLightSource(CAR_HEADLIGHT_RIGHT);
 
@@ -824,7 +825,7 @@ void GameManager::createButterPackets(void) {
 	createCube();
 }
 
-void GameManager::createCheerios() {
+void GameManager::createCheerios(void) {
 	float amb[] = { 0.0f,0.0f,0.0f,1.0f };
 	float diff[] = { 1.0f,0.0f,1.0f,1.0f };
 	float spec[] = { 1.0f,0.0f,1.0f,1.0f };
@@ -840,6 +841,24 @@ void GameManager::createCheerios() {
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createTorus(0.25f, 1.0f, 20, 20);
+}
+
+void GameManager::createCandleSticks(void) {
+	float amb[] = { 0.8f,0.8f,0.79f,1.0f };
+	float diff[] = { 0.8f,0.74f,0.42f,1.0f };
+	float spec[] = { 0.83f,0.8f,0.49f,1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 76.8f;
+	int texcount = 0;
+	objId = CANDLE_STICK;
+
+	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
+	mesh[objId].mat.shininess = shininess;
+	mesh[objId].mat.texCount = texcount;
+	createCylinder(2.0f, 1.0f, 30);
 }
 
 void GameManager::drawTable(void) {
@@ -1358,6 +1377,39 @@ void GameManager::drawCheerios() {
 		}
 	}
 }
+
+void GameManager::drawCandleSticks() {
+	GLint loc;
+	objId = CANDLE_STICK;
+	// send the material
+	for (int i = CANDLE_0; i <= CANDLE_5; i++) {
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+			glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+			glUniform4fv(loc, 1, mesh[objId].mat.specular);
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+			glUniform1f(loc, mesh[objId].mat.shininess);
+			pushMatrix(MODEL);
+			translate(MODEL, _lights[i]->getPosition()->getX(), 1.0f, _lights[i]->getPosition()->getZ());
+			scale(MODEL, 0.3f, 0.7f, 0.3f);
+			// send matrices to OGL
+			computeDerivedMatrix(PROJ_VIEW_MODEL);
+			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+			computeNormalMatrix3x3();
+			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+			// Render mesh
+			glBindVertexArray(mesh[objId].vao);
+			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+
+			popMatrix(MODEL);
+	}
+}
+
 
 void GameManager::setUpLights(void) {
 	GLint loc;

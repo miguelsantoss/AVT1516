@@ -16,6 +16,7 @@ class DynamicObject : public GameObject{
 
 	public:
 		DynamicObject();
+		DynamicObject(const Vector3& pos, double xmin, double xmax, double zmin, double zmax);
 		~DynamicObject();
 		virtual void draw(){};
 		void update(double delta_t);

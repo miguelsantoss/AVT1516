@@ -438,6 +438,17 @@ void GameManager::destroyCar() {
 
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
+	
+	for (int i = 0; i < 3; i++) {
+		if (_car->checkColision(_oranges[i])) {
+			switch (i) {
+			case(0) : printf("Colision 0"); break;
+			case(1) : printf("Colision 1"); break;
+			case(2) : printf("Colision 2"); break;
+			}
+			
+		}
+	}
 	_car->update(_delta_t);
 	_score += static_cast<int>(_car->getDistanceDone() * 100);
 	update_car_headlights();

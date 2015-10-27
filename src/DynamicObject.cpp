@@ -8,6 +8,15 @@ DynamicObject::DynamicObject() {
 	_distanceDone = 0;
 }
 
+DynamicObject::DynamicObject(const Vector3& pos, double xmin, double xmax, double zmin, double zmax) : GameObject(xmin, xmax, zmin, zmax)
+{
+	setXmax(pos.getX() + getOffsetX());
+	setXmin(pos.getX() - getOffsetX());
+	setZmax(pos.getZ() + getOffsetZ());
+	setZmin(pos.getZ() - getOffsetZ());
+	this->setPosition(pos);
+}
+
 DynamicObject::~DynamicObject() {}
 
 void DynamicObject::setTime(float time) {
@@ -39,7 +48,13 @@ void DynamicObject::update(double delta_t) {
 		_previousPosition.setY(position.getY());
 		_previousPosition.setZ(position.getZ());
 		this->setSpeed(speed.getX() + delta_t * _acceleration.getX(), speed.getY() + delta_t * _acceleration.getY(), speed.getZ() + delta_t * _acceleration.getZ());
-		Entity::setPosition(position.getX() + delta_t * _speed.getX(), position.getY() + delta_t * _speed.getY(), position.getZ() + delta_t * _speed.getZ());
+		double x = position.getX() + delta_t * _speed.getX();
+		double z = position.getZ() + delta_t * _speed.getZ();
+		setXmax(x + getOffsetX());
+		setXmin(x - getOffsetX());
+		setZmax(z + getOffsetZ());
+		setZmin(z - getOffsetZ());
+		Entity::setPosition(x, position.getY() + delta_t * _speed.getY(), z);
 		_distanceDone = delta_t * abs(_speed.getX()) + delta_t * abs(_speed.getZ());
 }
 

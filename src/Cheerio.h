@@ -1,9 +1,9 @@
 #ifndef __CHEERIO_H__
 #define __CHEERIO_H__
 
-#include "StaticObject.h"
+#include "DynamicObject.h"
 
-class Cheerio : public StaticObject {
+class Cheerio : public DynamicObject {
 	public:
 		Cheerio();
 		~Cheerio();

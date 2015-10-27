@@ -1,9 +1,9 @@
 #ifndef __BUTTERPACKET_H__
 #define __BUTTERPACKET_H__
 
-#include "StaticObject.h"
+#include "DynamicObject.h"
 
-class ButterPacket : public StaticObject {
+class ButterPacket : public DynamicObject {
 	public:
 		ButterPacket();
 		~ButterPacket();

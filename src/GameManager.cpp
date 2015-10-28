@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <ctime> 
 
 #include "GameManager.h"
 #include "TGA.h"
@@ -58,7 +59,7 @@ GameManager::~GameManager(void) {}
 void GameManager::init(void)
 {
 	_elap = 0;
-
+	srand((unsigned)time(0));
 	// set the camera position based on its spherical coordinates
 	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
@@ -126,7 +127,7 @@ void GameManager::restartGame() {
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
 	_score = 0;
-	_lifes = 5;
+	_lives = 5;
 	_oranges[0]->setPosition(Vector3(17.0f, 2.0f, 5.0f));
 	_oranges[1]->setPosition(Vector3(10.0f, 2.0f, 10.0f));
 	_oranges[2]->setPosition(Vector3(4.0f, 2.0f, 17.0f));
@@ -203,11 +204,13 @@ void GameManager::renderScene(void)
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[2]);
 
+	glUniform1i(texMode, 1);
 	glUniform1i(tex_loc_1, 0);
 	glUniform1i(tex_loc_2, 1);
 	glUniform1i(texUse, 1);
 	drawTable();
 	glUniform1i(tex_loc_1, 1);
+	glUniform1i(texMode, 2);
 	drawOranges();
 	
 	glUniform1i(texUse, 0);
@@ -227,7 +230,7 @@ void GameManager::renderScene(void)
 	std::string s = "Score:" + std::to_string(_score);
 	DrawString(635, 560, s);
 
-	s = "Lifes:" + std::to_string(_lifes);
+	s = "Lives:" + std::to_string(_lives);
 	DrawString(635, 580, s);
 	_fontSize = 25;
 	if (_paused) {
@@ -268,9 +271,6 @@ void GameManager::createLights(void) {
 	Vector4* ambient_headlight = new Vector4(0.78f, 0.88f, 1.0f, 1.0f);
 	Vector4* diffuse_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	Vector4* specular_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	Vector3 car_posistion = _car->getPosition();
-	Vector3 car_direction = _car->getDirection();
 
 	DirectionalLightSource* ambient = new DirectionalLightSource(AMBIENT_LIGHT);
 	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(new Vector4(4.0f, 2.0f, 6.0f, 1.0f));
@@ -459,8 +459,8 @@ void GameManager::updateCheerios(void)
 
 void GameManager::destroyCar() {
 	//resetPosition;
-	--_lifes;
-	if (_lifes <= 0) {
+	--_lives;
+	if (_lives <= 0) {
 		_gameOver = true;
 	}
 }
@@ -469,13 +469,13 @@ void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
 	if (_car->getPosition().getX() > 20.0 || _car->getPosition().getX() < 0.0 || _car->getPosition().getZ() > 20.0 || _car->getPosition().getZ() < 0.0) {
-		_lifes -= 1;
+		_lives -= 1;
 		_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
 		_car->setDirection(1.0f, 0.0f, 0.0f);
 	}
 	for (int i = 0; i < 3; i++) {
 		if (_car->checkColision(_oranges[i])) {
-			_lifes -= 1;
+			_lives -= 1;
 			_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
 			_car->setDirection(1.0f, 0.0f, 0.0f);
 			
@@ -494,7 +494,7 @@ void GameManager::update(double delta_t) {
 		}
 	}
 
-	if (_lifes == 0) _gameOver = true;
+	if (_lives == 0) _gameOver = true;
 	_score += static_cast<int>(_car->getDistanceDone() * 100);
 	update_car_headlights();
 	updateOranges();
@@ -562,11 +562,11 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			_paused = !_paused;
 			break;
 		case 't':
-			_lifes = 0;
+			_lives = 0;
 			_gameOver = true;
 			break;
 		case 'r':
-			if (_lifes == 0) {
+			if (_lives == 0) {
 				restartGame();
 			}
 			break;
@@ -728,6 +728,7 @@ GLuint GameManager::setupShaders(void)
 	useLights = glGetUniformLocation(shader.getProgramIndex(), "useLights");
 	writeMode = glGetUniformLocation(shader.getProgramIndex(), "writingMode");
 	vWriteMode = glGetUniformLocation(shader.getProgramIndex(), "vWritingMode");
+	texMode = glGetUniformLocation(shader.getProgramIndex(), "texMode");
 	
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());

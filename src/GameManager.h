@@ -58,7 +58,7 @@ class GameManager {
 		int WinX = 800, WinY = 600;
 		bool _paused = false;
 		bool _gameOver = false;
-		int _lifes = 5;
+		int _lives = 5;
 		int _score = 0;
 		double _elapsed;
 		double _delta_t;
@@ -92,6 +92,7 @@ class GameManager {
 		GLint texUse, useLights;
 		GLint writeMode;
 		GLint vWriteMode;
+		GLint texMode;
 
 		GLuint TextureArray[3];
 		GLuint _vaoID;

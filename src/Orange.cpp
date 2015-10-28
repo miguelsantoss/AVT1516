@@ -21,8 +21,17 @@ void Orange::increaseSpeed() {
 	interval += 1;
 }
 void Orange::reset(const Vector3& pos, double elapsed) {
+	float x = pos.getX();
+	float z = pos.getZ();
 	this->setPosition(pos);
-	this->setSpeed((rand() % interval - interval/2)/2000.0, 0, (rand() % interval - interval/2)/2000.0);
+	Vector3 speed = Vector3((rand() % interval - interval / 2) / 2000.0, 0, (rand() % interval - interval / 2) / 2000.0);
+	while (1) {
+		if (speed.getX() == 0 && speed.getZ() == 0)
+			speed = Vector3((rand() % interval - interval / 2) / 2000.0, 0, (rand() % interval - interval / 2) / 2000.0);
+		else
+			break;
+	}
+	this->setSpeed(speed.getX(), speed.getY(), speed.getZ());
 	this->setDirection(_speed.getX() / abs(_speed.getX()), _speed.getY() / abs(_speed.getY()), _speed.getZ() / abs(_speed.getZ()));
 	float *a = _speed.getArray();
 	float length = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);

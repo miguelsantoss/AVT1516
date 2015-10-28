@@ -8,7 +8,7 @@ DynamicObject::DynamicObject() {
 	_distanceDone = 0;
 }
 
-DynamicObject::DynamicObject(const Vector3& pos, double xmin, double xmax, double zmin, double zmax) : GameObject(xmin, xmax, zmin, zmax)
+DynamicObject::DynamicObject(const Vector3& pos, float offsetX, float offsetY) : GameObject(offsetX, offsetY)
 {
 	setXmax(pos.getX() + getOffsetX());
 	setXmin(pos.getX() - getOffsetX());

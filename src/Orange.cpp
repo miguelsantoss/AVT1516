@@ -4,7 +4,7 @@
 
 Orange::Orange() {}
 
-Orange::Orange(const Vector3& pos) : DynamicObject(pos, -0.2,0.2,-0.2,0.2){
+Orange::Orange(const Vector3& pos) : DynamicObject(pos, 0.4,0.4){
 	interval = 5;
 	reset(pos,1);
 	_angle = 0;

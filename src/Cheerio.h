@@ -5,7 +5,7 @@
 
 class Cheerio : public DynamicObject {
 	public:
-		Cheerio(const Vector3 & pos, double xmin, double xmax, double zmin, double zmax);
+		Cheerio(const Vector3 & pos, float offsetX, float offsetY);
 		~Cheerio();
 		void draw();
 		float * boxLimits();

@@ -9,7 +9,7 @@ class GameObject: public Entity {
 
 	public:
 		GameObject();
-		GameObject(double xmin, double xmax, double zmin, double zmax);
+		GameObject(float offsetX, float offsetY);
 		~GameObject();
     
 		virtual void update(double delta_t){};

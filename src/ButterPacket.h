@@ -5,7 +5,7 @@
 
 class ButterPacket : public DynamicObject {
 	public:
-		ButterPacket(const Vector3 & pos, double xmin, double xmax, double zmin, double zmax);
+		ButterPacket(const Vector3 & pos, float offsetX, float offsetY);
 		~ButterPacket();
 		void draw();
 		void dealColision(const Vector3 & direction, float acceleration, float speed);

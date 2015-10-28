@@ -74,13 +74,13 @@ void GameManager::init(void)
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
 
 	//scale(MODEL, 1.3f, 0.5f, 0.7f);
-	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), -0.325, 0.325, -0.125, 0.125));
-	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), -0.325, 0.325, -0.125, 0.125));
-	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), -0.325, 0.325, -0.125, 0.125));
+	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), 0.65,0.35));
+	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), 0.65, 0.35));
+	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), 0.65, 0.35));
 
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 2; j++) {
-			_cheerios.push_back(new Cheerio(Vector3(10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f), -0.125/2, 0.125/2, -0.125/2, 0.125/2));
+			_cheerios.push_back(new Cheerio(Vector3(10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f), -0.125, 0.125));
 		}
 	}
 
@@ -468,6 +468,11 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
+	if (_car->getPosition().getX() > 20.0 || _car->getPosition().getX() < 0.0 || _car->getPosition().getZ() > 20.0 || _car->getPosition().getZ() < 0.0) {
+		_lifes -= 1;
+		_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+		_car->setDirection(1.0f, 0.0f, 0.0f);
+	}
 	for (int i = 0; i < 3; i++) {
 		if (_car->checkColision(_oranges[i])) {
 			_lifes -= 1;

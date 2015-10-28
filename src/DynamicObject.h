@@ -16,7 +16,7 @@ class DynamicObject : public GameObject{
 
 	public:
 		DynamicObject();
-		DynamicObject(const Vector3& pos, double xmin, double xmax, double zmin, double zmax);
+		DynamicObject(const Vector3 & pos, float offsetX, float offsetY);
 		~DynamicObject();
 		virtual void draw(){};
 		float rotateCoordinate(float x, float y);

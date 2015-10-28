@@ -1,7 +1,7 @@
 #include "ButterPacket.h"
 
-ButterPacket::ButterPacket(const Vector3 & pos, double xmin, double xmax, double zmin, double zmax) :
-	DynamicObject(pos, xmin, xmax, zmin, zmax) {
+ButterPacket::ButterPacket(const Vector3 & pos, float offsetX, float offsetY) :
+	DynamicObject(pos, offsetX, offsetY) {
 	acceleration = 0;
 	speed = 0;
 	acceleration_factor = 0.00002;

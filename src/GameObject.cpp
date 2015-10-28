@@ -1,14 +1,14 @@
 #include "GameObject.h"
 
 GameObject::GameObject() {}
-GameObject::GameObject(double xmin, double xmax, double zmin, double zmax)
+GameObject::GameObject(float offsetX, float offsetY)
 {
-	_x = xmax - xmin;
-	_z = zmax - zmin;
-	_xmin = xmin;
-	_xmax = xmax;
-	_zmin = zmin;
-	_zmax = zmax;
+	_x = offsetX;
+	_z = offsetY;
+	_xmin = 0;
+	_xmax = 0;
+	_zmin = 0;
+	_zmax = 0;
 }
 GameObject::~GameObject() {}
 

@@ -3,7 +3,7 @@
 
 Car::Car() {}
 
-Car::Car(const Vector3& pos) : DynamicObject(pos, 0.7, 0.5) {
+Car::Car(const Vector3& pos) : DynamicObject(pos, 0.6, 0.4) {
 	acceleration = 0;
 	speed = 0;
 	acceleration_factor = 0.00002;

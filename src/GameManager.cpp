@@ -74,9 +74,9 @@ void GameManager::init(void)
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
 
 	//scale(MODEL, 1.3f, 0.5f, 0.7f);
-	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), 0.65,0.35));
-	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), 0.65, 0.35));
-	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), 0.65, 0.35));
+	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), 0.5,0.3));
+	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), 0.5, 0.3));
+	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), 0.5, 0.3));
 
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 2; j++) {

@@ -73,6 +73,17 @@ void GameManager::init(void)
 	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
 	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
 
+	//scale(MODEL, 1.3f, 0.5f, 0.7f);
+	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), -0.325, 0.325, -0.125, 0.125));
+	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), -0.325, 0.325, -0.125, 0.125));
+	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), -0.325, 0.325, -0.125, 0.125));
+
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 2; j++) {
+			_cheerios.push_back(new Cheerio(Vector3(10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f), -0.125/2, 0.125/2, -0.125/2, 0.125/2));
+		}
+	}
+
 	glGenTextures(3, TextureArray);
 
 	TGA_Texture(TextureArray, "stone.tga", 0);
@@ -427,6 +438,24 @@ void GameManager::refresh()
 
 	update(_delta_t);
 }
+void GameManager::updateButters(void)
+{
+	ButterPacket* o;
+	std::vector<ButterPacket*>::iterator to_up;
+	for (to_up = _butters.begin(); to_up != _butters.end(); to_up++) {
+		o = static_cast<ButterPacket*>(*to_up);
+		o->update(_delta_t);
+	}
+}
+void GameManager::updateCheerios(void)
+{
+	Cheerio* o;
+	std::vector<Cheerio*>::iterator to_up;
+	for (to_up = _cheerios.begin(); to_up != _cheerios.end(); to_up++) {
+		o = static_cast<Cheerio*>(*to_up);
+		o->update(_delta_t);
+	}
+}
 
 void GameManager::destroyCar() {
 	//resetPosition;
@@ -438,21 +467,34 @@ void GameManager::destroyCar() {
 
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
-	
+	_car->update(_delta_t);
 	for (int i = 0; i < 3; i++) {
 		if (_car->checkColision(_oranges[i])) {
-			switch (i) {
-			case(0) : printf("Colision 0"); break;
-			case(1) : printf("Colision 1"); break;
-			case(2) : printf("Colision 2"); break;
-			}
+			_lifes -= 1;
+			_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+			_car->setDirection(1.0f, 0.0f, 0.0f);
 			
 		}
+		if (_car->checkColision(_butters[i])) {
+			_butters[i]->dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
+			_car->accelerationStop();
+			_car->dealColision();
+		}
 	}
-	_car->update(_delta_t);
+	for (int i = 0; i < 20; i++) {
+		if (_car->checkColision(_cheerios[i])) {
+			_cheerios[i]->dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
+			_car->accelerationStop();
+			_car->dealColision();
+		}
+	}
+
+	if (_lifes == 0) _gameOver = true;
 	_score += static_cast<int>(_car->getDistanceDone() * 100);
 	update_car_headlights();
 	updateOranges();
+	updateButters();
+	updateCheerios();
 	glutPostRedisplay();
 }
 
@@ -1331,7 +1373,10 @@ void GameManager::drawButterPackets(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		translate(MODEL, x1[i], 1.0f, z1[i]);
+		translate(MODEL, _butters[i]->getPosition().getX(), _butters[i]->getPosition().getY(), _butters[i]->getPosition().getZ());
+
+		pushMatrix(MODEL);
+		translate(MODEL, -0.65, 0.0, -0.35);
 		scale(MODEL, 1.3f, 0.5f, 0.7f);
 		
 		
@@ -1348,6 +1393,7 @@ void GameManager::drawButterPackets(void) {
 		glBindVertexArray(0);
 
 		popMatrix(MODEL);
+		popMatrix(MODEL);
 	}
 }
 
@@ -1355,8 +1401,7 @@ void GameManager::drawCheerios() {
 	GLint loc;
 	objId = CHEERIO;
 	// send the material
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 2; j++) {
+	for (int i = 0; i < 20; i++) {
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
@@ -1367,10 +1412,9 @@ void GameManager::drawCheerios() {
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
 			//translate(MODEL, 5.5f - j * 2.7, 1.10f, -7.3f + i * 0.95);
-			translate(MODEL, 10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f);
-			scale(MODEL, 0.5f, 0.5f, 0.5f);
-			scale(MODEL, 0.5f, 0.5f, 0.5f);
-
+			translate(MODEL, _cheerios[i]->getPosition().getX(), _cheerios[i]->getPosition().getY(), _cheerios[i]->getPosition().getZ());
+			translate(MODEL, -0.125, 0.0, -0.125);
+			scale(MODEL, 0.25f, 0.25f, 0.25f);
 
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -1385,7 +1429,6 @@ void GameManager::drawCheerios() {
 			glBindVertexArray(0);
 
 			popMatrix(MODEL);
-		}
 	}
 }
 

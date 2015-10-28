@@ -19,6 +19,7 @@ class DynamicObject : public GameObject{
 		DynamicObject(const Vector3& pos, double xmin, double xmax, double zmin, double zmax);
 		~DynamicObject();
 		virtual void draw(){};
+		float rotateCoordinate(float x, float y);
 		void update(double delta_t);
 
 		void setSpeed(const Vector3 &speed);
@@ -27,6 +28,11 @@ class DynamicObject : public GameObject{
         void setDirection(float x, float y, float z);
 		void setAcceleration(float x, float y, float z);
 		void setAcceleration(const Vector3 &acceleration);
+
+		Vector3 rotateCoordinate(float x, float y, float centerX, float centerY, float angle);
+
+		void dealColision(const Vector3 & acceleration);
+
 
 		virtual float* boxLimits() = 0;
 

@@ -24,6 +24,8 @@
 #include "Orange.h"
 #include "DirectionalLightSource.h"
 #include "PointLightSource.h"
+#include "ButterPacket.h"
+#include "Cheerio.h"
 
 class GameManager {
 	public:
@@ -65,6 +67,8 @@ class GameManager {
 		Car* _car;
 
 		std::vector<Orange*> _oranges;
+		std::vector<ButterPacket*> _butters;
+		std::vector<Cheerio*> _cheerios;
 
 		int _cameraLook;
 		Camera* _activeCamera;
@@ -133,6 +137,8 @@ class GameManager {
 
 		void setUpLights(void);
 		void update(double delta_t);
+		void updateButters(void);
+		void updateCheerios(void);
 		void destroyCar(void);
 		void createLights(void);
 		void updateOranges(void);

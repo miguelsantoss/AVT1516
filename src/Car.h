@@ -20,12 +20,16 @@ class Car: public DynamicObject {
 		void steerRight();
 		void steerLeft();
 		void steerStop();
+		void dealColision();
 		void update(double delta_t) override;
 		float* boxLimits();
+		double getSpeed();
+		double getAcceleration();
 		double getAngle();
 		void setAngle(double angle) { _angle = angle; }
 		double getWeelAngle();
 private:
+	Vector3* _lastposition;
 	double acceleration, speed;
 	double acceleration_input;
 	double acceleration_factor;

@@ -15,6 +15,9 @@ DynamicObject::DynamicObject(const Vector3& pos, double xmin, double xmax, doubl
 	setZmax(pos.getZ() + getOffsetZ());
 	setZmin(pos.getZ() - getOffsetZ());
 	this->setPosition(pos);
+	this->setAcceleration(0, 0, 0);
+	this->setDirection(1, 0, 0);
+	this->setSpeed(0.0, 0, 0);
 }
 
 DynamicObject::~DynamicObject() {}
@@ -39,6 +42,16 @@ void DynamicObject::setAcceleration(const Vector3 &acceleration) {
 	_acceleration.set(acceleration.getX(), acceleration.getY(), acceleration.getZ());
 }
 
+Vector3 DynamicObject::rotateCoordinate(float x, float y, float centerX, float centerY, float angle) {
+	float x2 = centerX + (x - centerX)*cos(angle) + (y - centerY)*sin(angle);
+	float y2 = centerY - (x - centerX)*sin(angle) + (y - centerY)*cos(angle);
+	return Vector3(x, y, 0);
+}
+
+void DynamicObject::dealColision(const Vector3 &acceleration) {
+	setAcceleration(acceleration);
+}
+
 void DynamicObject::update(double delta_t) {
 		//if(getTime() > 0) return;
 		
@@ -48,6 +61,8 @@ void DynamicObject::update(double delta_t) {
 		_previousPosition.setY(position.getY());
 		_previousPosition.setZ(position.getZ());
 		this->setSpeed(speed.getX() + delta_t * _acceleration.getX(), speed.getY() + delta_t * _acceleration.getY(), speed.getZ() + delta_t * _acceleration.getZ());
+		
+		speed = this->getSpeed(); 
 		double x = position.getX() + delta_t * _speed.getX();
 		double z = position.getZ() + delta_t * _speed.getZ();
 		setXmax(x + getOffsetX());

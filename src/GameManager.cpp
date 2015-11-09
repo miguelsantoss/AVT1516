@@ -112,8 +112,10 @@ void GameManager::init(void)
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -215,13 +217,13 @@ void GameManager::renderScene(void)
 	
 	glUniform1i(texUse, 0);
 	drawButterPackets();
-	drawCar();
 	drawCheerios();
+	glDisable(GL_CULL_FACE);
 	drawCandleSticks();
-	glUniform1i(useLights, 0);
+	drawCar();
+	glEnable(GL_CULL_FACE);
 	glUniform1i(writeMode, 1);
 	glUniform1i(vWriteMode, 1);
-
 
 	_scoreCamera->computeProjection();
 	glUniform1i(texUse, 1);
@@ -240,7 +242,6 @@ void GameManager::renderScene(void)
 		DrawString(315, 320, "Game Over!");
 		DrawString(135, 280, "Press R to Restart the game");
 	}
-	glUniform1i(useLights, 1);
 	glUniform1i(writeMode, 0);
 	glUniform1i(vWriteMode, 0);
 	glutSwapBuffers();
@@ -264,7 +265,6 @@ void GameManager::printDebugCameras(void) {
 
 void GameManager::createLights(void) {
 	Vector4* ambient_candle = new Vector4(1.0f, 0.57f, 0.16f, 1.0f);
-	//(1.0f0.77f, 0.46f, 1.0f)
 	Vector4* diffuse_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	Vector4* specular_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -725,7 +725,6 @@ GLuint GameManager::setupShaders(void)
 	tex_loc_1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
 	tex_loc_2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
 	texUse = glGetUniformLocation(shader.getProgramIndex(), "useTextures");
-	useLights = glGetUniformLocation(shader.getProgramIndex(), "useLights");
 	writeMode = glGetUniformLocation(shader.getProgramIndex(), "writingMode");
 	vWriteMode = glGetUniformLocation(shader.getProgramIndex(), "vWritingMode");
 	texMode = glGetUniformLocation(shader.getProgramIndex(), "texMode");
@@ -799,10 +798,10 @@ void GameManager::createCar(void) {
 	mesh[objId].mat.texCount = texcount;
 	createTorus(0.25f, 1.0f, 20, 20);
 
-	float amb3[] = { 0.26f,0.25f,1.0f,1.0f };
-	float diff3[] = { 0.52f,1.0f,1.0f,1.0f };
-	float spec3[] = { 1.0f,1.0f,1.0f,1.0f };
-	float emissive3[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float amb3[] = { 0.26f,0.25f,1.0f,0.3f };
+	float diff3[] = { 0.52f,1.0f,1.0f,0.3f };
+	float spec3[] = { 1.0f,1.0f,1.0f,0.3f };
+	float emissive3[] = { 0.0f, 0.0f, 0.0f, 0.3f };
 	float shininess3 = 128.0f;
 	int texcount3 = 0;
 	objId = Windows;
@@ -903,10 +902,10 @@ void GameManager::createCheerios(void) {
 }
 
 void GameManager::createCandleSticks(void) {
-	float amb[] = { 0.8f,0.8f,0.79f,1.0f };
-	float diff[] = { 0.8f,0.74f,0.42f,1.0f };
-	float spec[] = { 0.83f,0.8f,0.49f,1.0f };
-	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float amb[] = { 0.8f,0.8f,0.79f,0.95f };
+	float diff[] = { 0.8f,0.74f,0.42f,0.95f };
+	float spec[] = { 0.83f,0.8f,0.49f,0.95f };
+	float emissive[] = { 1.0f, 0.57f, 0.16f, 0.95f };
 	float shininess = 76.8f;
 	int texcount = 0;
 	objId = CANDLE_STICK;
@@ -1327,6 +1326,7 @@ void GameManager::drawOranges(void) {
 	for (int i = 0; i < 3; i++) {
 		angle = _oranges[i]->getAngle();
 		angle += _oranges[i]->getDistanceDone() / circumference * 360;
+		_oranges[i]->setDistanceDone(0);
 		//std::cout << "test: " << angle << std::endl;
 		_oranges[i]->setAngle(angle);
 		float normalized = _oranges[i]->getSpeed().getX() * _oranges[i]->getSpeed().getX() + _oranges[i]->getSpeed().getZ() * _oranges[i]->getSpeed().getZ();

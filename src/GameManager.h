@@ -89,7 +89,7 @@ class GameManager {
 		GLint normal_uniformId;
 		GLint lPos_uniformId;
 		GLint tex_loc_1, tex_loc_2;
-		GLint texUse, useLights;
+		GLint texUse;
 		GLint writeMode;
 		GLint vWriteMode;
 		GLint texMode;

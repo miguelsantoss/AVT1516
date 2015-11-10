@@ -115,6 +115,8 @@ void GameManager::init(void)
 	_fogColor[0] = 0.16f;
 	_fogColor[1] = 0.62f;
 	_fogColor[2] = 0.77f;
+	_fogDensity = 0.1f;
+	_fogMode = 2;
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -213,9 +215,12 @@ void GameManager::renderScene(void)
 
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[3]);
+
+	glUniform1f(fogDensity, _fogDensity);
 	glUniform1i(fogState, _fogState);
-	glUniform1i(fogMode, 0);
+	glUniform1i(fogMode, _fogMode);
 	glUniform3fv(fogColor, 1, _fogColor);
+
 	glUniform1i(texMode, 1);
 	glUniform1i(tex_loc_1, 0);
 	glUniform1i(tex_loc_2, 1);
@@ -622,6 +627,16 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case 'i':
 			_fogState = !_fogState;
 			break;
+		case '8':
+			_fogMode = 0;
+			break;
+		case '9':
+			_fogMode = 1;
+			break;
+		case '0':
+			_fogMode = 2;
+			break;
+
 	}
 }
 
@@ -749,7 +764,7 @@ GLuint GameManager::setupShaders(void)
 	fogState = glGetUniformLocation(shader.getProgramIndex(), "fogState");
 	fogMode = glGetUniformLocation(shader.getProgramIndex(), "fogMode");
 	fogColor = glGetUniformLocation(shader.getProgramIndex(), "fogColor");
-	
+	fogDensity = glGetUniformLocation(shader.getProgramIndex(), "fogDensity");
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 

@@ -43,9 +43,11 @@ uniform bool useTextures;
 uniform bool useLights;
 uniform bool writingMode;
 uniform int texMode;
+
 uniform int fogState;
 uniform int fogMode;
 uniform vec3 fogColor;
+uniform float fogDensity;
 
 uniform sampler2D texmap1;
 uniform sampler2D texmap2;
@@ -61,8 +63,15 @@ vec3 colorFogFunction(in vec3 frag_rgb_in, in vec3 pos) {
 	float dist = length(pos);
 	float fogAmount = 0;
 	if (fogMode == 0) {
-		fogAmount = exp(-dist*0.1);
+		fogAmount = (15 - dist)/(15 - 7.5);
 	}
+	else if (fogMode == 1) {
+		fogAmount = 1.0 / exp(dist * fogDensity);
+	}
+	else if (fogMode == 2) {
+		fogAmount = 1.0 / exp((dist * fogDensity) * (dist * fogDensity));
+	}
+	fogAmount = clamp(fogAmount, 0.0, 1.0);
 	return mix(fogColor, frag_rgb_in, fogAmount);
 }
 
@@ -137,7 +146,7 @@ void main() {
 
 		}
 		vec3 frag_rgb = min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
-		if (fogState == 1 && Position.z < 1) {
+		if (fogState == 1) {
 			frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
 		}
 		colorOut = vec4(frag_rgb, mat.diffuse.a*tex.a);

@@ -64,7 +64,8 @@ class GameManager {
 		double _elapsed;
 		double _delta_t;
 		double _elap;
-		float _fogColor[3];
+		float _fogColor[3], _fogDensity;
+		int _fogMode = 1;
 
 		Car* _car;
 
@@ -95,7 +96,7 @@ class GameManager {
 		GLint writeMode;
 		GLint vWriteMode;
 		GLint texMode;
-		GLint fogState, fogMode, fogColor;
+		GLint fogState, fogMode, fogColor, fogDensity;
 
 		GLuint TextureArray[4];
 		GLuint _vaoID;

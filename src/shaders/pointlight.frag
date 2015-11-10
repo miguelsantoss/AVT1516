@@ -42,10 +42,13 @@ uniform LightProperties lights[Maxlights];
 uniform bool useTextures;
 uniform bool useLights;
 uniform bool writingMode;
+uniform int texMode;
+uniform int fogState;
+uniform int fogMode;
+uniform vec3 fogColor;
 
 uniform sampler2D texmap1;
 uniform sampler2D texmap2;
-uniform sampler2D fontTex;
 
 in vec3 Normal;
 in vec4 Position;
@@ -54,22 +57,32 @@ in vec2 tex_coord;
 
 out vec4 colorOut;
 
+vec3 colorFogFunction(in vec3 frag_rgb_in, in vec3 pos) {
+	float dist = length(pos);
+	float fogAmount = 0;
+	if (fogMode == 0) {
+		fogAmount = exp(-dist*0.1);
+	}
+	return mix(fogColor, frag_rgb_in, fogAmount);
+}
+
 void main() {
 	if (!writingMode) {
-		vec4 scatteredLight = vec4(0.0); // or, to a global ambient light
-		vec4 reflectedLight = vec4(0.0);
+		vec3 scatteredLight = vec3(0.0); // or, to a global ambient light
+		vec3 reflectedLight = vec3(0.0);
 		vec4 texel, texel1;
-		texel = texture(texmap2, tex_coord);
-		texel1 = texture(texmap1, tex_coord);
+		texel = texture(texmap1, tex_coord);
+		texel1 = texture(texmap2, tex_coord);
 		vec4 tex = vec4(1.0);
 		if (useTextures) {
-			tex = texel * texel1;
+			if (texMode == 1) {
+				tex = texel * texel1;
+			}
+			else if (texMode == 2) {
+				tex = texel;
+			}
 		}
-		/*vec3 LightContribution = vec3(0.0);
-		vec3 ambient_term = vec3(0.0);
-		vec3 diffuse_term = vec3(0.0);
-		vec3 specular_term = vec3(0.0);*/
-
+		
 		// loop over all the lights
 		for (int light = 0; light < Maxlights; light++) {
 
@@ -85,8 +98,6 @@ void main() {
 				lightDirection = lights[light].position_point;
 			}
 			float attenuation = 1.0;
-			// for local lights, compute per-fragment direction,
-			// halfVector, and attenuation
 
 			if (lights[light].isLocal) {
 				lightDirection = lightDirection - vec3(Position);
@@ -121,21 +132,17 @@ void main() {
 			specular = pow(specular, mat.shininess);
 
 			// Accumulate all the lights’ effects
-			scatteredLight += lights[light].ambient * mat.ambient * attenuation * tex + lights[light].diffuse * mat.diffuse * diffuse * attenuation * tex;
-			reflectedLight += lights[light].specular * mat.specular * specular * attenuation * tex;
+			scatteredLight += lights[light].diffuse.rgb * mat.ambient.rgb * attenuation + lights[light].ambient.rgb * mat.diffuse.rgb * diffuse * attenuation;
+			reflectedLight += lights[light].ambient.rgb * mat.specular.rgb * specular * attenuation;
 
-			/*ambient_term += lights[light].ambient * mat.ambient;
-			diffuse_term += lights[light].diffuse * mat.diffuse * diffuse;
-			specular_term += lights[light].specular * mat.specular * specular;
-			LightContribution += attenuation * (ambient_term + diffuse_term + specular_term); */
 		}
-		vec4 rgb = min(mat.emissive + scatteredLight + reflectedLight, vec4(1.0));
-		if (useLights) {
-			colorOut = rgb;
+		vec3 frag_rgb = min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
+		if (fogState == 1 && Position.z < 1) {
+			frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
 		}
-		else {
-			colorOut = mat.diffuse;
-		}
+		colorOut = vec4(frag_rgb, mat.diffuse.a*tex.a);
+		if (tex.a == 0)
+			discard;
 	}
 	else {
 		vec4 col = vec4(1,1,1,1);

@@ -27,6 +27,7 @@ struct MyMesh {
 	};
 
 void createCube();
+void createSquare();
 void createSphere(float radius, int divisions);
 void createTorus(float innerRadius, float outerRadius, int rings, int sides);
 void createCylinder(float height, float radius, int sides);

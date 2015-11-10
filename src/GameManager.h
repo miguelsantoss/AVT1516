@@ -58,11 +58,13 @@ class GameManager {
 		int WinX = 800, WinY = 600;
 		bool _paused = false;
 		bool _gameOver = false;
+		bool _fogState = true;
 		int _lives = 5;
 		int _score = 0;
 		double _elapsed;
 		double _delta_t;
 		double _elap;
+		float _fogColor[3];
 
 		Car* _car;
 
@@ -89,13 +91,15 @@ class GameManager {
 		GLint normal_uniformId;
 		GLint lPos_uniformId;
 		GLint tex_loc_1, tex_loc_2;
-		GLint texUse;
+		GLint texUse, useLights;
 		GLint writeMode;
 		GLint vWriteMode;
 		GLint texMode;
+		GLint fogState, fogMode, fogColor;
 
-		GLuint TextureArray[3];
+		GLuint TextureArray[4];
 		GLuint _vaoID;
+		GLuint treeID;
 
 		GLuint _texCoordBuffer;
 		GLuint _vertexBuffer;
@@ -128,6 +132,7 @@ class GameManager {
 		void createButterPackets(void);
 		void createCheerios(void);
 		void createCandleSticks(void);
+		void createTreeSquare(void);
 
 		void drawTable(void);
 		void drawOranges(void);
@@ -135,6 +140,7 @@ class GameManager {
 		void drawButterPackets(void);
 		void drawCheerios(void);
 		void drawCandleSticks(void);
+		void drawTreeSquare(void);
 
 		void setUpLights(void);
 		void update(double delta_t);
@@ -147,6 +153,11 @@ class GameManager {
 		void initTextureMappedFont();
 		void DrawString(float x, float y, const std::string& str);
 		void restartGame();
+
+		void billboardRotation(float objPosX, float objPosY, float objPosZ);
+		void normalize(float* v);
+		void crossProduct(float* v1, float* v2, float* v3);
+		float innerProduct(float* v1, float* v2);
 };
 
 #endif /* __MICROMACHINES_GM__ */

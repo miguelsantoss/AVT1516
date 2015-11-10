@@ -31,9 +31,9 @@ const int CANDLE_5 = 6;
 const int CAR_HEADLIGHT_LEFT = 7;
 const int CAR_HEADLIGHT_RIGHT = 8;
 
-
+int angle = 0;
 int rotation = 0;
-struct MyMesh mesh[11];
+struct MyMesh mesh[12];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -41,6 +41,7 @@ int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID
 /// The storage for matrices
 extern float mMatrix[COUNT_MATRICES][16];
 extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
+float auxMatrix[16];
 
 /// The normal matrix
 extern float mNormal3x3[9];
@@ -90,6 +91,7 @@ void GameManager::init(void)
 	TGA_Texture(TextureArray, "stone.tga", 0);
 	TGA_Texture(TextureArray, "lightwood.tga", 1);
 	TGA_Texture(TextureArray, "fonts/font1.tga", 2);
+	TGA_Texture(TextureArray, "tree.tga", 3);
 
 	_fontSize = 16;
 
@@ -101,6 +103,7 @@ void GameManager::init(void)
 	createCheerios();
 	createCandleSticks();
 	initTextureMappedFont();
+	createTreeSquare();
 
 	// Cameras
 	_cameraLook = 1;
@@ -109,14 +112,16 @@ void GameManager::init(void)
 	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_activeCamera = _orthogonalCamera;
-
+	_fogColor[0] = 0.16f;
+	_fogColor[1] = 0.62f;
+	_fogColor[2] = 0.77f;
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.16f, 0.62f, 0.77f, 1.0f);
 }
 
 void GameManager::restartGame() {
@@ -206,6 +211,11 @@ void GameManager::renderScene(void)
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[2]);
 
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[3]);
+	glUniform1i(fogState, _fogState);
+	glUniform1i(fogMode, 0);
+	glUniform3fv(fogColor, 1, _fogColor);
 	glUniform1i(texMode, 1);
 	glUniform1i(tex_loc_1, 0);
 	glUniform1i(tex_loc_2, 1);
@@ -214,10 +224,13 @@ void GameManager::renderScene(void)
 	glUniform1i(tex_loc_1, 1);
 	glUniform1i(texMode, 2);
 	drawOranges();
-	
+	glUniform1i(tex_loc_1, 3);
+	drawTreeSquare();
+	//billboardEnd();
 	glUniform1i(texUse, 0);
 	drawButterPackets();
 	drawCheerios();
+	
 	glDisable(GL_CULL_FACE);
 	drawCandleSticks();
 	drawCar();
@@ -226,6 +239,7 @@ void GameManager::renderScene(void)
 	glUniform1i(vWriteMode, 1);
 
 	_scoreCamera->computeProjection();
+	glUniform1i(useLights, 0);
 	glUniform1i(texUse, 1);
 	glUniform1i(tex_loc_1, 2);
 	_fontSize = 16;
@@ -244,6 +258,7 @@ void GameManager::renderScene(void)
 	}
 	glUniform1i(writeMode, 0);
 	glUniform1i(vWriteMode, 0);
+	glUniform1i(useLights, 1);
 	glutSwapBuffers();
 }
 
@@ -604,7 +619,9 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 			_lights[CAR_HEADLIGHT_LEFT]->setState(!_lights[CAR_HEADLIGHT_LEFT]->getState());
 			_lights[CAR_HEADLIGHT_RIGHT]->setState(!_lights[CAR_HEADLIGHT_RIGHT]->getState());
 			break;
-			
+		case 'i':
+			_fogState = !_fogState;
+			break;
 	}
 }
 
@@ -725,9 +742,13 @@ GLuint GameManager::setupShaders(void)
 	tex_loc_1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
 	tex_loc_2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
 	texUse = glGetUniformLocation(shader.getProgramIndex(), "useTextures");
+	useLights = glGetUniformLocation(shader.getProgramIndex(), "useLights");
 	writeMode = glGetUniformLocation(shader.getProgramIndex(), "writingMode");
 	vWriteMode = glGetUniformLocation(shader.getProgramIndex(), "vWritingMode");
 	texMode = glGetUniformLocation(shader.getProgramIndex(), "texMode");
+	fogState = glGetUniformLocation(shader.getProgramIndex(), "fogState");
+	fogMode = glGetUniformLocation(shader.getProgramIndex(), "fogMode");
+	fogColor = glGetUniformLocation(shader.getProgramIndex(), "fogColor");
 	
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
@@ -1693,4 +1714,184 @@ void GameManager::DrawString(float x, float y, const std::string& str) {
 	popMatrix(MODEL);
 
 	glEnable(GL_DEPTH_TEST);
+}
+
+void GameManager::createTreeSquare() {
+	float amb[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float diff[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float spec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 0.25f;
+	int texcount = 0;
+	objId = 11;
+
+	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
+	mesh[objId].mat.shininess = shininess;
+	mesh[objId].mat.texCount = texcount;
+	createSquare();
+}
+
+void GameManager::drawTreeSquare() {
+	GLint loc;
+	objId = 11;
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+	glUniform4fv(loc, 1, mesh[objId].mat.specular);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+	glUniform1f(loc, mesh[objId].mat.shininess);
+
+	pushMatrix(MODEL);
+	
+	translate(MODEL, 10.0f, 1.0f, 10.0f);
+	translate(MODEL, 0.5f, 0.0f, 1.0f);
+	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
+	billboardRotation(10.0f, 1.0f, 10.0f);
+	translate(MODEL, -0.5f, 0.0f, -1.0f);
+	scale(MODEL, 1.4f, 2.0f, 1.4f);
+
+	
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+	
+	pushMatrix(MODEL);
+	translate(MODEL, 5.0f, 1.0f, 15.0f);
+	translate(MODEL, 0.5f, 0.0f, 1.0f);
+	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
+	billboardRotation(5.0f, 1.0f, 15.0f);
+	translate(MODEL, -0.5f, 0.0f, -1.0f);
+	scale(MODEL, 1.4f, 2.0f, 1.4f);
+	//billboardCylindricalBegin(10.0f, 1.0f, 5.5f);
+
+
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+
+	pushMatrix(MODEL);
+	translate(MODEL, 15.0f, 1.0f, 5.0f);
+	translate(MODEL, 0.5f, 0.0f, 1.0f);
+	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
+	billboardRotation(15.0f, 1.0f, 5.0f);
+	translate(MODEL, -0.5f, 0.0f, -1.0f);
+	scale(MODEL, 1.4f, 2.0f, 1.4f);
+	//billboardCylindricalBegin(10.0f, 1.0f, 5.5f);
+
+
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+	
+}
+
+void GameManager::billboardRotation(float objPosX, float objPosY, float objPosZ) {
+
+	float lookAt[3], objToCamProj[3], upAux[3];
+	float angleCosine;
+
+	// objToCamProj is the vector in world coordinates from the 
+	// local origin to the camera projected in the XZ plane
+	Vector3 direction = _car->getDirection();
+	float xcamX, xcamZ;
+	if (_cameraLook == 1) {
+		xcamX = 0;
+		xcamZ = 0;
+	}
+	else if (_cameraLook == 2) {
+		xcamX = -5;
+		xcamZ = -5;
+	}
+	else if (_cameraLook == 3) {
+		xcamX = _car->getPosition().getX() - 2 * direction.getX();
+		xcamZ = _car->getPosition().getZ() - 2 * direction.getZ();
+	}
+
+	objToCamProj[0] = xcamX - objPosX;
+	objToCamProj[1] = 0;
+	objToCamProj[2] = xcamZ - objPosZ;
+
+	// This is the original lookAt vector for the object 
+	// in world coordinates
+	lookAt[0] = 0;
+	lookAt[1] = 0;
+	lookAt[2] = 1;
+
+
+	// normalize both vectors to get the cosine directly afterwards
+	normalize(objToCamProj);
+
+	// easy fix to determine wether the angle is negative or positive
+	// for positive angles upAux will be a vector pointing in the 
+	// positive y direction, otherwise upAux will point downwards
+	// effectively reversing the rotation.
+
+	crossProduct(upAux, lookAt, objToCamProj);
+
+	// compute the angle
+	angleCosine = innerProduct(lookAt, objToCamProj);
+
+	// perform the rotation. The if statement is used for stability reasons
+	// if the lookAt and objToCamProj vectors are too close together then 
+	// |angleCosine| could be bigger than 1 due to lack of precision
+	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+		rotate(MODEL, acos(angleCosine) * 180 / 3.14, upAux[0], upAux[1], upAux[2]);
+}
+
+void GameManager::normalize(float* v) {
+	int len = 3;
+	float norm = 0.0f;
+	for (int i = 0; i < len; i++) {
+		norm += v[i] * v[i];
+	}
+	norm = sqrt(norm);
+	for (int i = 0; i < len; i++) {
+		v[i] = v[i] / norm;
+	}
+}
+
+void GameManager::crossProduct(float* v1, float* v2, float* v3) {
+	v1[0] = v2[1] * v3[2] - v2[2] * v3[1];
+	v1[1] = v2[2] * v3[0] - v2[0] * v3[2];
+	v1[2] = v2[0] * v3[1] - v2[1] * v3[0];
+}
+
+float GameManager::innerProduct(float* v1, float* v2) {
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }

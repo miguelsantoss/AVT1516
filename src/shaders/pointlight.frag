@@ -156,5 +156,7 @@ void main() {
 	else {
 		vec4 col = vec4(1,1,1,1);
 		colorOut = texture(texmap1, tex_coord)*col;
+		if (colorOut.rgb == vec3(0.0))
+			discard;
 	}
 }

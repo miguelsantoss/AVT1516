@@ -31,8 +31,6 @@ const int CANDLE_5 = 6;
 const int CAR_HEADLIGHT_LEFT = 7;
 const int CAR_HEADLIGHT_RIGHT = 8;
 
-int angle = 0;
-int rotation = 0;
 struct MyMesh mesh[12];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
@@ -115,15 +113,15 @@ void GameManager::init(void)
 	_fogColor[0] = 0.16f;
 	_fogColor[1] = 0.62f;
 	_fogColor[2] = 0.77f;
-	_fogDensity = 0.1f;
-	_fogMode = 2;
+	_fogDensity = 0.075f;
+	_fogMode = 1;
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.16f, 0.62f, 0.77f, 1.0f);
+	glClearColor(_fogColor[0], _fogColor[1], _fogColor[2], 1.0f);
 }
 
 void GameManager::restartGame() {
@@ -143,7 +141,7 @@ void GameManager::restartGame() {
 
 	_activeCamera = _orthogonalCamera;
 
-
+	/*
 	_lights[AMBIENT_LIGHT]->setState(false);
 	_lights[CANDLE_0]->setState(true);
 	_lights[CANDLE_1]->setState(true);
@@ -152,7 +150,7 @@ void GameManager::restartGame() {
 	_lights[CANDLE_4]->setState(true);
 	_lights[CANDLE_5]->setState(true);
 	_lights[CAR_HEADLIGHT_LEFT]->setState(true);
-	_lights[CAR_HEADLIGHT_RIGHT]->setState(true);
+	_lights[CAR_HEADLIGHT_RIGHT]->setState(true);*/
 }
 
 // ------------------------------------------------------------
@@ -229,9 +227,7 @@ void GameManager::renderScene(void)
 	glUniform1i(tex_loc_1, 1);
 	glUniform1i(texMode, 2);
 	drawOranges();
-	glUniform1i(tex_loc_1, 3);
-	drawTreeSquare();
-	//billboardEnd();
+	
 	glUniform1i(texUse, 0);
 	drawButterPackets();
 	drawCheerios();
@@ -240,12 +236,13 @@ void GameManager::renderScene(void)
 	drawCandleSticks();
 	drawCar();
 	glEnable(GL_CULL_FACE);
+	glUniform1i(texUse, 1);
+	glUniform1i(tex_loc_1, 3);
+	drawTreeSquare();
 	glUniform1i(writeMode, 1);
 	glUniform1i(vWriteMode, 1);
-
 	_scoreCamera->computeProjection();
 	glUniform1i(useLights, 0);
-	glUniform1i(texUse, 1);
 	glUniform1i(tex_loc_1, 2);
 	_fontSize = 16;
 	std::string s = "Score:" + std::to_string(_score);
@@ -1746,7 +1743,8 @@ void GameManager::createTreeSquare() {
 	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createSquare();
+	createQuad(2.0f,2.0f);
+	//createSquare();
 }
 
 void GameManager::drawTreeSquare() {
@@ -1764,12 +1762,8 @@ void GameManager::drawTreeSquare() {
 
 	pushMatrix(MODEL);
 	
-	translate(MODEL, 10.0f, 1.0f, 10.0f);
-	translate(MODEL, 0.5f, 0.0f, 1.0f);
-	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
-	billboardRotation(10.0f, 1.0f, 10.0f);
-	translate(MODEL, -0.5f, 0.0f, -1.0f);
-	scale(MODEL, 1.4f, 2.0f, 1.4f);
+	translate(MODEL, 10.0f, 2.0f, 10.0f);
+	billboardRotation(10.0f, 2.0f, 10.0f);
 
 	
 	// send matrices to OGL
@@ -1787,13 +1781,8 @@ void GameManager::drawTreeSquare() {
 	popMatrix(MODEL);
 	
 	pushMatrix(MODEL);
-	translate(MODEL, 5.0f, 1.0f, 15.0f);
-	translate(MODEL, 0.5f, 0.0f, 1.0f);
-	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
-	billboardRotation(5.0f, 1.0f, 15.0f);
-	translate(MODEL, -0.5f, 0.0f, -1.0f);
-	scale(MODEL, 1.4f, 2.0f, 1.4f);
-	//billboardCylindricalBegin(10.0f, 1.0f, 5.5f);
+	translate(MODEL, 5.0f, 2.0f, 15.0f);
+	billboardRotation(5.0f, 2.0f, 15.0f);
 
 
 	// send matrices to OGL
@@ -1811,13 +1800,8 @@ void GameManager::drawTreeSquare() {
 	popMatrix(MODEL);
 
 	pushMatrix(MODEL);
-	translate(MODEL, 15.0f, 1.0f, 5.0f);
-	translate(MODEL, 0.5f, 0.0f, 1.0f);
-	//rotate(MODEL, angle, 0.0f, 1.0f, 0.0f);
-	billboardRotation(15.0f, 1.0f, 5.0f);
-	translate(MODEL, -0.5f, 0.0f, -1.0f);
-	scale(MODEL, 1.4f, 2.0f, 1.4f);
-	//billboardCylindricalBegin(10.0f, 1.0f, 5.5f);
+	translate(MODEL, 15.0f, 2.0f, 5.0f);
+	billboardRotation(15.0f, 2.0f, 5.0f);
 
 
 	// send matrices to OGL
@@ -1833,7 +1817,6 @@ void GameManager::drawTreeSquare() {
 	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 	popMatrix(MODEL);
-	
 }
 
 void GameManager::billboardRotation(float objPosX, float objPosY, float objPosZ) {
@@ -1888,6 +1871,8 @@ void GameManager::billboardRotation(float objPosX, float objPosY, float objPosZ)
 	if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
 		rotate(MODEL, acos(angleCosine) * 180 / 3.14, upAux[0], upAux[1], upAux[2]);
 }
+
+
 
 void GameManager::normalize(float* v) {
 	int len = 3;

@@ -27,6 +27,7 @@ struct MyMesh {
 	};
 
 void createCube();
+void createQuad(float size_x, float size_y);
 void createSquare();
 void createSphere(float radius, int divisions);
 void createTorus(float innerRadius, float outerRadius, int rings, int sides);
@@ -37,5 +38,6 @@ void computeVAO(int numP, float *p, float *pfloatoints, int sides, float smoothC
 void create (float *p, int numP, int sides, int closed, float smoothCos);
 int revSmoothNormal2(float *p, float *nx, float *ny, float smoothCos, int beginEnd);
 float *circularProfile(float minAngle, float maxAngle, float radius, int divisions, float transX= 0.0f, float transY = 0.0f);
+
 
 #endif

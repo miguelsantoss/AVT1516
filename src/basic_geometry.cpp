@@ -67,6 +67,53 @@ void createCube() {
 	mesh[objId].type = GL_TRIANGLES;
 }
 
+void createQuad(float size_x, float size_y) {
+
+	int i;
+	float vert[16];
+	mesh[objId].numIndexes = 2 * 3;
+
+	memcpy(vert, quad_vertices, sizeof(float) * 16);
+
+	for (i = 0; i< 4; i++) {
+		vert[i * 4] *= size_x;
+		vert[i * 4 + 1] *= size_y;
+	}
+
+	glGenVertexArrays(1, &(mesh[objId].vao));
+	glBindVertexArray(mesh[objId].vao);
+
+	glGenBuffers(2, VboId);
+	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices) + sizeof(quad_normals) + sizeof(quad_texCoords), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quad_vertices), vert);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(quad_vertices), sizeof(quad_normals), quad_normals);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(quad_vertices) + sizeof(quad_normals), sizeof(quad_texCoords), quad_texCoords);
+
+	glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	glVertexAttribPointer(VERTEX_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, 0);
+	glEnableVertexAttribArray(NORMAL_ATTRIB);
+	glVertexAttribPointer(NORMAL_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)sizeof(quad_vertices));
+	glEnableVertexAttribArray(TEXTURE_COORD_ATTRIB);
+	glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(quad_vertices) + sizeof(quad_normals)));
+
+
+	//index buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VboId[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh[objId].numIndexes, quad_faceIndex, GL_STATIC_DRAW);
+
+	// unbind the VAO
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDisableVertexAttribArray(VERTEX_COORD_ATTRIB);
+	glDisableVertexAttribArray(NORMAL_ATTRIB);
+	glDisableVertexAttribArray(TEXTURE_COORD_ATTRIB);
+
+	mesh[objId].type = GL_TRIANGLES;
+}
+
 void createSquare() {
 	float vertices_square[] = {
 		0.0f, 1.0f, 1.0f, 1.0f,

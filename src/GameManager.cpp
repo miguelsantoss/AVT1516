@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <ctime> 
+#include <ctime>
+#include <math.h>
 
 #include "GameManager.h"
 #include "TGA.h"
@@ -31,7 +32,7 @@ const int CANDLE_5 = 6;
 const int CAR_HEADLIGHT_LEFT = 7;
 const int CAR_HEADLIGHT_RIGHT = 8;
 
-struct MyMesh mesh[12];
+struct MyMesh mesh[13];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -84,12 +85,13 @@ void GameManager::init(void)
 		}
 	}
 
-	glGenTextures(3, TextureArray);
+	glGenTextures(5, TextureArray);
 
-	TGA_Texture(TextureArray, "stone.tga", 0);
-	TGA_Texture(TextureArray, "lightwood.tga", 1);
-	TGA_Texture(TextureArray, "fonts/font1.tga", 2);
-	TGA_Texture(TextureArray, "tree.tga", 3);
+	TGA_Texture(TextureArray, "textures/stone.tga", 0);
+	TGA_Texture(TextureArray, "textures/lightwood.tga", 1);
+	TGA_Texture(TextureArray, "textures/fonts/font1.tga", 2);
+	TGA_Texture(TextureArray, "textures/tree.tga", 3);
+	TGA_Texture(TextureArray, "textures/firework_particle.tga", 4);
 
 	_fontSize = 16;
 
@@ -102,6 +104,7 @@ void GameManager::init(void)
 	createCandleSticks();
 	initTextureMappedFont();
 	createTreeSquare();
+	createParticleQuad();
 
 	// Cameras
 	_cameraLook = 1;
@@ -110,11 +113,15 @@ void GameManager::init(void)
 	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_activeCamera = _orthogonalCamera;
+
 	_fogColor[0] = 0.16f;
 	_fogColor[1] = 0.62f;
 	_fogColor[2] = 0.77f;
 	_fogDensity = 0.075f;
 	_fogMode = 1;
+
+	createParticles(1000);
+
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -214,6 +221,11 @@ void GameManager::renderScene(void)
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[3]);
 
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[4]);
+
+	glUniform1i(particleMode, 0);
+
 	glUniform1f(fogDensity, _fogDensity);
 	glUniform1i(fogState, _fogState);
 	glUniform1i(fogMode, _fogMode);
@@ -236,9 +248,16 @@ void GameManager::renderScene(void)
 	drawCandleSticks();
 	drawCar();
 	glEnable(GL_CULL_FACE);
+
 	glUniform1i(texUse, 1);
 	glUniform1i(tex_loc_1, 3);
 	drawTreeSquare();
+	if (_fireworks) {
+		glUniform1i(tex_loc_1, 4);
+		glUniform1i(particleMode, 1);
+		drawParticleQuad();
+		glUniform1i(particleMode, 0);
+	}
 	glUniform1i(writeMode, 1);
 	glUniform1i(vWriteMode, 1);
 	_scoreCamera->computeProjection();
@@ -633,7 +652,10 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 		case '0':
 			_fogMode = 2;
 			break;
-
+		case 'u':
+			_fireworks = true;
+			initParticles();
+			break;
 	}
 }
 
@@ -762,10 +784,11 @@ GLuint GameManager::setupShaders(void)
 	fogMode = glGetUniformLocation(shader.getProgramIndex(), "fogMode");
 	fogColor = glGetUniformLocation(shader.getProgramIndex(), "fogColor");
 	fogDensity = glGetUniformLocation(shader.getProgramIndex(), "fogDensity");
+	particleMode = glGetUniformLocation(shader.getProgramIndex(), "particleMode");
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
-	//while (1);
+	//3while (1);
 	return(shader.isProgramValid());
 }
 
@@ -1743,7 +1766,7 @@ void GameManager::createTreeSquare() {
 	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createQuad(2.0f,2.0f);
+	createQuad(3.0f,3.0f);
 	//createSquare();
 }
 
@@ -1762,8 +1785,8 @@ void GameManager::drawTreeSquare() {
 
 	pushMatrix(MODEL);
 	
-	translate(MODEL, 10.0f, 2.0f, 10.0f);
-	billboardRotation(10.0f, 2.0f, 10.0f);
+	translate(MODEL, 10.0f, 2.5f, 10.0f);
+	billboardRotation(10.0f, 2.5f, 10.0f);
 
 	
 	// send matrices to OGL
@@ -1781,8 +1804,8 @@ void GameManager::drawTreeSquare() {
 	popMatrix(MODEL);
 	
 	pushMatrix(MODEL);
-	translate(MODEL, 5.0f, 2.0f, 15.0f);
-	billboardRotation(5.0f, 2.0f, 15.0f);
+	translate(MODEL, 5.0f, 2.5f, 15.0f);
+	billboardRotation(5.0f, 2.5f, 15.0f);
 
 
 	// send matrices to OGL
@@ -1800,8 +1823,8 @@ void GameManager::drawTreeSquare() {
 	popMatrix(MODEL);
 
 	pushMatrix(MODEL);
-	translate(MODEL, 15.0f, 2.0f, 5.0f);
-	billboardRotation(15.0f, 2.0f, 5.0f);
+	translate(MODEL, 15.0f, 2.5f, 5.0f);
+	billboardRotation(15.0f, 2.5f, 5.0f);
 
 
 	// send matrices to OGL
@@ -1894,4 +1917,100 @@ void GameManager::crossProduct(float* v1, float* v2, float* v3) {
 
 float GameManager::innerProduct(float* v1, float* v2) {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+void GameManager::initParticles() {
+	GLfloat v, theta, phi;
+	std::vector<Particle*>::iterator j;
+	for (j = _particles.begin(); j != _particles.end(); j++) {
+		v = 0.8*frand() + 0.2;
+		phi = frand()*M_PI;
+		theta = 2.0*frand()*M_PI;
+
+		(*j)->resetValues(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
+			0.1f, -0.15f, 0.0f, 0.882f, 0.552f, 0.211f, 1.0f, 0.005f);
+	}
+}
+
+void GameManager::createParticles(int nParticles) {
+	GLfloat v, theta, phi;
+
+	for (int i = 0; i < nParticles; i++) {
+		v = 0.8*frand() + 0.2;
+		phi = frand()*M_PI;
+		theta = 2.0*frand()*M_PI;
+
+		_particles.push_back(new Particle(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
+			0.1f, -0.15f, 0.0f, 0.882f, 0.552f, 0.211f, 1.0f, 0.005f));
+	}
+}
+
+void GameManager::updateParticles(float delta_t) {
+	std::vector<Particle*>::iterator j;
+	for (j = _particles.begin(); j != _particles.end(); j++) {
+		(*j)->update(delta_t);
+	}
+}
+
+float GameManager::frand() {
+	return (float)rand() / RAND_MAX;
+}
+
+void GameManager::iterate() {
+	if (_fireworks) {
+		updateParticles(0.125f);
+		glutPostRedisplay();
+	}
+}
+
+void GameManager::createParticleQuad() {
+	int texcount = 0;
+	objId = 12;
+
+	mesh[objId].mat.texCount = texcount;
+	createQuad(0.3f, 0.3f);
+}
+
+void GameManager::drawParticleQuad() {
+	GLint loc;
+	objId = 12;
+	int nPDone = 0;
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glDisable(GL_DEPTH_TEST);
+	float particle_color[4];
+	std::vector<Particle*>::iterator i;
+	for (i = _particles.begin(); i != _particles.end(); i++) {
+		if ((*i)->getLife() > 0.0f) {
+
+			particle_color[0] = (*i)->getColor()->getX();
+			particle_color[1] = (*i)->getColor()->getY();
+			particle_color[2] = (*i)->getColor()->getZ();
+			particle_color[3] = (*i)->getLife();
+
+			// send the material - diffuse color modulated with texture
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+			glUniform4fv(loc, 1, particle_color);
+
+			pushMatrix(MODEL);
+			translate(MODEL, (*i)->getPosition()->getX(), (*i)->getPosition()->getY(), (*i)->getPosition()->getZ());
+			billboardRotation((*i)->getPosition()->getX(), (*i)->getPosition()->getY(), (*i)->getPosition()->getZ());
+
+			// send matrices to OGL
+			computeDerivedMatrix(PROJ_VIEW_MODEL);
+			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+			computeNormalMatrix3x3();
+			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+			glBindVertexArray(mesh[objId].vao);
+			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+			popMatrix(MODEL);
+			nPDone++;
+		}
+	}
+	if (nPDone == 0) {
+		_fireworks = false;
+	}
+	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }

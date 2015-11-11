@@ -26,6 +26,7 @@
 #include "PointLightSource.h"
 #include "ButterPacket.h"
 #include "Cheerio.h"
+#include "Particle.h"
 
 class GameManager {
 	public:
@@ -37,7 +38,8 @@ class GameManager {
 		void changeSize(int w, int h);
 		void timer();
 		void refresh();
-		void increaseSpeed(void);
+		void increaseSpeed();
+		void iterate();
 
 		void keyUp(unsigned char key);
 
@@ -59,6 +61,7 @@ class GameManager {
 		bool _paused = false;
 		bool _gameOver = false;
 		bool _fogState = true;
+		bool _fireworks = false;
 		int _lives = 5;
 		int _score = 0;
 		double _elapsed;
@@ -72,6 +75,7 @@ class GameManager {
 		std::vector<Orange*> _oranges;
 		std::vector<ButterPacket*> _butters;
 		std::vector<Cheerio*> _cheerios;
+		std::vector<Particle*> _particles;
 
 		int _cameraLook;
 		Camera* _activeCamera;
@@ -97,8 +101,9 @@ class GameManager {
 		GLint vWriteMode;
 		GLint texMode;
 		GLint fogState, fogMode, fogColor, fogDensity;
+		GLint particleMode;
 
-		GLuint TextureArray[4];
+		GLuint TextureArray[5];
 		GLuint _vaoID;
 		GLuint treeID;
 
@@ -134,6 +139,7 @@ class GameManager {
 		void createCheerios(void);
 		void createCandleSticks(void);
 		void createTreeSquare(void);
+		void createParticleQuad(void);
 
 		void drawTable(void);
 		void drawOranges(void);
@@ -142,6 +148,7 @@ class GameManager {
 		void drawCheerios(void);
 		void drawCandleSticks(void);
 		void drawTreeSquare(void);
+		void drawParticleQuad(void);
 
 		void setUpLights(void);
 		void update(double delta_t);
@@ -154,6 +161,10 @@ class GameManager {
 		void initTextureMappedFont();
 		void DrawString(float x, float y, const std::string& str);
 		void restartGame();
+		void createParticles(int nParticles);
+		void initParticles();
+		float frand();
+		void updateParticles(float delta_t);
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);
 		void normalize(float* v);

@@ -8,6 +8,7 @@
 #include <GL/freeglut.h>
 #include "GameManager.h"
 #define CAPTION "MicroMachines"
+#define FPS 60
 
 GameManager* gm;
 
@@ -25,7 +26,12 @@ void increaseSpeed(int value)
 void refresh(int value)
 {
 	gm->refresh();
-	glutTimerFunc(1000 / 60, refresh, 0);
+	glutTimerFunc(1000 / FPS, refresh, 0);
+}
+
+void iterate(int value) {
+	gm->iterate();
+	glutTimerFunc(33, iterate, 0);
 }
 
 void keyUp(unsigned char key, int x, int y) { gm->keyUp(key);}
@@ -65,7 +71,7 @@ int main(int argc, char **argv) {
 	glutMouseWheelFunc(mouseWheel) ;
 	glutTimerFunc(0, timer, 0);
 	glutTimerFunc(0, refresh, 0);
-
+	glutTimerFunc(0, iterate, 0);
 
 //	return from main loop
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);

@@ -42,6 +42,7 @@ uniform LightProperties lights[Maxlights];
 uniform bool useTextures;
 uniform bool useLights;
 uniform bool writingMode;
+uniform bool particleMode;
 uniform int texMode;
 
 uniform int fogState;
@@ -76,87 +77,94 @@ vec3 colorFogFunction(in vec3 frag_rgb_in, in vec3 pos) {
 }
 
 void main() {
-	if (!writingMode) {
-		vec3 scatteredLight = vec3(0.0); // or, to a global ambient light
-		vec3 reflectedLight = vec3(0.0);
-		vec4 texel, texel1;
-		texel = texture(texmap1, tex_coord);
-		texel1 = texture(texmap2, tex_coord);
-		vec4 tex = vec4(1.0);
-		if (useTextures) {
-			if (texMode == 1) {
-				tex = texel * texel1;
+	if (!particleMode) {
+		if (!writingMode) {
+			vec3 scatteredLight = vec3(0.0); // or, to a global ambient light
+			vec3 reflectedLight = vec3(0.0);
+			vec4 texel, texel1;
+			texel = texture(texmap1, tex_coord);
+			texel1 = texture(texmap2, tex_coord);
+			vec4 tex = vec4(1.0);
+			if (useTextures) {
+				if (texMode == 1) {
+					tex = texel * texel1;
+				}
+				else if (texMode == 2) {
+					tex = texel;
+				}
 			}
-			else if (texMode == 2) {
-				tex = texel;
-			}
-		}
-		
-		// loop over all the lights
-		for (int light = 0; light < Maxlights; light++) {
+			
+			// loop over all the lights
+			for (int light = 0; light < Maxlights; light++) {
 
-			if (! lights[light].isEnabled) 
-				continue;
+				if (! lights[light].isEnabled) 
+					continue;
 
-			vec3 halfVector;
-			vec3 lightDirection;
-			if (lights[light].isSpot) {
-				lightDirection  = vec3(lights[light].position);
-			}
-			else {
-				lightDirection = lights[light].position_point;
-			}
-			float attenuation = 1.0;
-
-			if (lights[light].isLocal) {
-				lightDirection = lightDirection - vec3(Position);
-				float lightDistance = length(lightDirection);
-				lightDirection = lightDirection / lightDistance;
-				attenuation = 1.0 /
-								(lights[light].constantAttenuation
-									+ lights[light].linearAttenuation * lightDistance
-									+ lights[light].quadraticAttenuation * lightDistance
-									* lightDistance);
+				vec3 halfVector;
+				vec3 lightDirection;
 				if (lights[light].isSpot) {
-					float spotCos = dot(lightDirection, normalize(vec3(-lights[light].direction)));
+					lightDirection  = vec3(lights[light].position);
+				}
+				else {
+					lightDirection = lights[light].position_point;
+				}
+				float attenuation = 1.0;
 
-					if (spotCos < lights[light].spotCosCutoff)
-						attenuation = 0.0;
-					else
-						attenuation *= pow(spotCos, lights[light].spotExponent);
+				if (lights[light].isLocal) {
+					lightDirection = lightDirection - vec3(Position);
+					float lightDistance = length(lightDirection);
+					lightDirection = lightDirection / lightDistance;
+					attenuation = 1.0 /
+									(lights[light].constantAttenuation
+										+ lights[light].linearAttenuation * lightDistance
+										+ lights[light].quadraticAttenuation * lightDistance
+										* lightDistance);
+					if (lights[light].isSpot) {
+						float spotCos = dot(lightDirection, normalize(vec3(-lights[light].direction)));
+
+						if (spotCos < lights[light].spotCosCutoff)
+							attenuation = 0.0;
+						else
+							attenuation *= pow(spotCos, lights[light].spotExponent);
+					}
+
+					halfVector = normalize(lightDirection + EyeDirection);
+				}
+				else {
+					lightDirection = normalize(vec3(-lights[light].direction));
+					halfVector = normalize(lightDirection + EyeDirection / 2);
 				}
 
-				halfVector = normalize(lightDirection + EyeDirection);
+				float diffuse = max(0.0, dot(Normal, lightDirection));
+				float specular = max(0.0, dot(Normal, halfVector));
+				if (diffuse == 0.0)
+					specular = 0.0;
+				else
+				specular = pow(specular, mat.shininess);
+
+				// Accumulate all the lights’ effects
+				scatteredLight += lights[light].diffuse.rgb * mat.ambient.rgb * attenuation + lights[light].ambient.rgb * mat.diffuse.rgb * diffuse * attenuation;
+				reflectedLight += lights[light].ambient.rgb * mat.specular.rgb * specular * attenuation;
+
 			}
-			else {
-				lightDirection = normalize(vec3(-lights[light].direction));
-				halfVector = normalize(lightDirection + EyeDirection / 2);
+			vec3 frag_rgb = min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
+			if (fogState == 1) {
+				frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
 			}
-
-			float diffuse = max(0.0, dot(Normal, lightDirection));
-			float specular = max(0.0, dot(Normal, halfVector));
-			if (diffuse == 0.0)
-				specular = 0.0;
-			else
-			specular = pow(specular, mat.shininess);
-
-			// Accumulate all the lights’ effects
-			scatteredLight += lights[light].diffuse.rgb * mat.ambient.rgb * attenuation + lights[light].ambient.rgb * mat.diffuse.rgb * diffuse * attenuation;
-			reflectedLight += lights[light].ambient.rgb * mat.specular.rgb * specular * attenuation;
-
+			colorOut = vec4(frag_rgb, mat.diffuse.a*tex.a);
+			if (tex.a == 0)
+				discard;
 		}
-		vec3 frag_rgb = min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
-		if (fogState == 1) {
-			frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
+		else {
+			vec4 col = vec4(1,1,1,1);
+			colorOut = texture(texmap1, tex_coord)*col;
+			if (colorOut.rgb == vec3(0.0))
+				discard;
 		}
-		colorOut = vec4(frag_rgb, mat.diffuse.a*tex.a);
-		if (tex.a == 0)
-			discard;
 	}
 	else {
-		vec4 col = vec4(1,1,1,1);
-		colorOut = texture(texmap1, tex_coord)*col;
-		if (colorOut.rgb == vec3(0.0))
-			discard;
+		vec4 tex = texture(texmap1, tex_coord);
+		colorOut = tex * mat.diffuse;
 	}
+	
 }

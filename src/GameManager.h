@@ -58,12 +58,18 @@ class GameManager {
 	private:
 		int WindowHandle = 0;
 		int WinX = 800, WinY = 600;
+		float tableXMin;
+		float tableXMax;
+		float tableZMin;
+		float tableZMax;
+		Vector3 carStartPos;
+
 		bool _paused = false;
 		bool _gameOver = false;
-		bool _fogState = true;
+		bool _fogState = false;
 		bool _fireworks = false;
 		int _lives = 5;
-		int _score = 0;
+		long unsigned int _score = 0;
 		double _elapsed;
 		double _delta_t;
 		double _elap;
@@ -72,10 +78,10 @@ class GameManager {
 
 		Car* _car;
 
-		std::vector<Orange*> _oranges;
-		std::vector<ButterPacket*> _butters;
-		std::vector<Cheerio*> _cheerios;
-		std::vector<Particle*> _particles;
+		std::vector<Orange> _oranges;
+		std::vector<ButterPacket> _butters;
+		std::vector<Cheerio> _cheerios;
+		std::vector<Particle> _particles;
 
 		int _cameraLook;
 		Camera* _activeCamera;
@@ -164,6 +170,7 @@ class GameManager {
 		void createParticles(int nParticles);
 		void initParticles();
 		float frand();
+		float frand(float min, float max);
 		void updateParticles(float delta_t);
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);

@@ -29,7 +29,7 @@ class Car: public DynamicObject {
 		void setAngle(double angle) { _angle = angle; }
 		double getWeelAngle();
 private:
-	Vector3* _lastposition;
+	Vector3 _lastposition;
 	double acceleration, speed;
 	double acceleration_input;
 	double acceleration_factor;

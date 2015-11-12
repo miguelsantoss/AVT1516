@@ -16,12 +16,12 @@ void Vector4::set(float in_x, float in_y, float in_z, float in_w) {
 	_w = in_w;
 }
 
-float Vector4::getW() {
+float Vector4::getW() const {
 	return _w;
 }
 
 float* Vector4::getArray() {
-	float * f = new float[4];
+	float f[4];
 	f[0] = this->getX();
 	f[1] = this->getY();
 	f[2] = this->getZ();

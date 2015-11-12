@@ -10,10 +10,10 @@ class Particle {
 protected:
 	float _life;
 	float _fade;
-	Vector3 *_color;
-	Vector3 *_position;
-	Vector3 *_speed;
-	Vector3 *_acceleration;
+	Vector3 _color;
+	Vector3 _position;
+	Vector3 _speed;
+	Vector3 _acceleration;
 
 	
 public:
@@ -32,8 +32,8 @@ public:
 					 float life, float fade);
 
 	float getLife() { return _life; }
-	Vector3* getColor() { return _color; }
-	Vector3* getPosition() { return _position; }
+	const Vector3& getColor() { return _color; }
+	const Vector3& getPosition() { return _position; }
 };
 
 

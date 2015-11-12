@@ -18,6 +18,7 @@ DynamicObject::DynamicObject(const Vector3& pos, float offsetX, float offsetY) :
 	this->setAcceleration(0, 0, 0);
 	this->setDirection(1, 0, 0);
 	this->setSpeed(0.0, 0, 0);
+	_distanceDone = 0;
 }
 
 DynamicObject::~DynamicObject() {}

@@ -8,11 +8,11 @@
 class LightSource {
 
 protected:
-	Vector4 *_ambient;
-	Vector4 *_diffuse;
-	Vector4 *_specular;
-	Vector4 *_position;
-	Vector4 *_direction;
+	Vector4 _ambient;
+	Vector4 _diffuse;
+	Vector4 _specular;
+	Vector4 _position;
+	Vector4 _direction;
 	float _cut_off;
 	float _exponent;
 	bool _state;
@@ -32,21 +32,27 @@ public:
 	void setIsSpot(bool isSpot) { _isSpot = isSpot; }
 
 	GLenum getNum();
-	void setPosition(Vector4 *position);
-	void setDirection(Vector4 *direction);
+	
 	void setCutOff(float cut_off) { _cut_off = cut_off; }
 	void setExponent(float exponent) { _exponent = exponent; }
-	void setAmbient(Vector4 *ambient);
-	void setDiffuse(Vector4 *diffuse);
-	void setSpecular(Vector4 *specular);
+	void setPosition(const Vector4& position);
+	void setDirection(const Vector4& direction);
+	void setAmbient(const Vector4& ambient);
+	void setDiffuse(const Vector4& diffuse);
+	void setSpecular(const Vector4& specular);
+	void setPosition(float x, float y, float z, float w);
+	void setDirection(float x, float y, float z, float w);
+	void setAmbient(float x, float y, float z, float w);
+	void setDiffuse(float x, float y, float z, float w);
+	void setSpecular(float x, float y, float z, float w);
 
-	Vector4* getPosition() { return _position; }
-	Vector4* getDirection() { return _direction; }
+	const Vector4& getPosition() { return _position; }
+	const Vector4& getDirection() { return _direction; }
 	float getCutOff() { return _cut_off; }
 	float getExponent() { return _exponent; }
-	Vector4* getAmbient() { return _ambient; }
-	Vector4* getDiffuse() { return _diffuse; }
-	Vector4* getSpecular() { return _specular; }
+	const Vector4& getAmbient() { return _ambient; }
+	const Vector4& getDiffuse() { return _diffuse; }
+	const Vector4& getSpecular() { return _specular; }
 };
 
 #endif /* LIGHTSOURCE_H_ */

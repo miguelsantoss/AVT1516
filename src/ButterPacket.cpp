@@ -30,7 +30,7 @@ void ButterPacket::update(double delta_t) {
 
 	Vector3 position = this->getPosition();
 
-	Vector3* lastposition = new Vector3(position.getX(), position.getY(), position.getZ());
+	Vector3 lastposition = Vector3(position.getX(), position.getY(), position.getZ());
 	setSpeed(speed * _direction.getX(), speed * direction.getY(), speed * direction.getZ());
 	double pos_x = position.getX() + (delta_t * speed * _direction.getX());
 	double pos_y = position.getY() + (delta_t * speed * _direction.getY());
@@ -43,11 +43,11 @@ void ButterPacket::update(double delta_t) {
 	Entity::setPosition(pos_x, pos_y, pos_z);	float newx, newy, newz;
 
 	position = this->getPosition();
-	newx = position.getX() - lastposition->getX();
+	newx = position.getX() - lastposition.getX();
 	newx *= newx;
-	newy = position.getY() - lastposition->getY();
+	newy = position.getY() - lastposition.getY();
 	newy *= newy;
-	newz = position.getZ() - lastposition->getZ();
+	newz = position.getZ() - lastposition.getZ();
 	newz *= newz;
 	this->setDistanceDone(sqrt(newx + newy + newz));
 }

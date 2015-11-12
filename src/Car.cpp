@@ -6,7 +6,7 @@ Car::Car() {}
 Car::Car(const Vector3& pos) : DynamicObject(pos, 0.6, 0.4) {
 	acceleration = 0;
 	speed = 0;
-	acceleration_factor = 0.00002;
+	acceleration_factor = 0.000035;
 	acceleration_input = 0;
 	_angle = 0;
 	weel_angle = 0;
@@ -18,7 +18,7 @@ Car::Car(const Vector3& pos) : DynamicObject(pos, 0.6, 0.4) {
 	backwards_friction_factor = 0.004;
 	this->setDirection(1.0, 0.0, 0.0);
 	//this->setPosition(pos);
-	
+	_lastposition = Vector3(pos.getX(), pos.getY(), pos.getZ());
 }
 
 Car::~Car() {}
@@ -51,12 +51,13 @@ void Car::accelerationDecrease() {
 void Car::accelerationStop() {
 	acceleration_input = 0;
 }
+
 void Car::steerLeft() {
-		steer_input = -5; //FIXME
+		steer_input = -3; //FIXME
 		weel_angle = 25;
 }
 void Car::steerRight() {
-		steer_input = 5; //FIXME
+		steer_input = 3; //FIXME
 		weel_angle = -25;
 }
 void Car::steerStop() {
@@ -67,7 +68,7 @@ void Car::steerStop() {
 
 void Car::dealColision() {
 	speed = 0;
-	setPosition(_lastposition->getX(), _lastposition->getY(), _lastposition->getZ());
+	setPosition(_lastposition.getX(), _lastposition.getY(), _lastposition.getZ());
 }
 
 void Car::update(double delta_t){
@@ -92,7 +93,7 @@ void Car::update(double delta_t){
 	speed = speed + acceleration* delta_t;
 	Vector3 position = this->getPosition();
 
-	_lastposition = new Vector3(position.getX(), position.getY(), position.getZ());
+	_lastposition.set(position.getX(), position.getY(), position.getZ());
 	setSpeed(speed * _direction.getX(), speed * direction.getY(), speed * direction.getZ());
 	double pos_x = position.getX() + (delta_t * speed * _direction.getX());
 	double pos_y = position.getY() + (delta_t * speed * _direction.getY());
@@ -112,11 +113,11 @@ void Car::update(double delta_t){
 	Entity::setPosition(pos_x, pos_y, pos_z);	float newx, newy, newz;
 
 	position = this->getPosition();
-	newx = position.getX() - _lastposition->getX();
+	newx = position.getX() - _lastposition.getX();
 	newx *= newx;
-	newy = position.getY() - _lastposition->getY();
+	newy = position.getY() - _lastposition.getY();
 	newy *= newy;
-	newz = position.getZ() - _lastposition->getZ();
+	newz = position.getZ() - _lastposition.getZ();
 	newz *= newz;
 	this->setDistanceDone(sqrt(newx + newy + newz));
 }

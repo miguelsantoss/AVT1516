@@ -10,8 +10,7 @@
 #define CAPTION "MicroMachines"
 #define ORANGE_RADIUS 1.0f
 
-const int TABLE_WHITE_SQUARE = 0;
-const int TABLE_BLUE_SQUARE = 1;
+const int TABLE_SQUARE = 0;
 const int ORANGE = 2;
 const int BUTTER = 3;
 const int CAR_BODY = 4;
@@ -65,29 +64,19 @@ void GameManager::init(void)
 	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 	camY = r *   						     sin(beta * 3.14f / 180.0f);
 
+	tableXMin = -3.0f;
+	tableXMax = 63.0f;
+	tableZMin = -3.0f;
+	tableZMax = 63.0f;
+	carStartPos = Vector3(28.7, 1.15f, 6.1f);
 	camX = camY = camZ = 0;
 
-	_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+	_car = new Car(carStartPos);
 	_car->setDirection(1.0f, 0.0f, 0.0f);
-
-	_oranges.push_back(new Orange(Vector3(17.0f, 2.0f, 5.0f)));
-	_oranges.push_back(new Orange(Vector3(10.0f, 2.0f, 10.0f)));
-	_oranges.push_back(new Orange(Vector3(4.0f, 2.0f, 17.0f)));
-
-	//scale(MODEL, 1.3f, 0.5f, 0.7f);
-	_butters.push_back(new ButterPacket(Vector3(2.0f, 1.0f, 17.0f), 0.5,0.3));
-	_butters.push_back(new ButterPacket(Vector3(13.0f, 1.0f, 10.0f), 0.5, 0.3));
-	_butters.push_back(new ButterPacket(Vector3(18.0f, 1.0f, 14.0f), 0.5, 0.3));
-
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 2; j++) {
-			_cheerios.push_back(new Cheerio(Vector3(10.0f - i * 0.95f, 1.10f, 4.3f - j *2.7f), -0.125, 0.125));
-		}
-	}
 
 	glGenTextures(5, TextureArray);
 
-	TGA_Texture(TextureArray, "textures/stone.tga", 0);
+	TGA_Texture(TextureArray, "textures/test.tga", 0);
 	TGA_Texture(TextureArray, "textures/lightwood.tga", 1);
 	TGA_Texture(TextureArray, "textures/fonts/font1.tga", 2);
 	TGA_Texture(TextureArray, "textures/tree.tga", 3);
@@ -108,7 +97,7 @@ void GameManager::init(void)
 
 	// Cameras
 	_cameraLook = 1;
-	_orthogonalCamera = new OrthogonalCamera(0.0, 20.0, 0.0, 20.0, -10.0, 10.0);
+	_orthogonalCamera = new OrthogonalCamera(-3.0, 63.0, -3.0, 63.0, -10.0, 10.0);
 	_perspectiveTop = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
@@ -120,7 +109,7 @@ void GameManager::init(void)
 	_fogDensity = 0.075f;
 	_fogMode = 1;
 
-	createParticles(1000);
+	createParticles(100);
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
@@ -137,14 +126,14 @@ void GameManager::restartGame() {
 
 	delete(_car);
 
-	_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+	_car = new Car(carStartPos);
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
 	_score = 0;
 	_lives = 5;
-	_oranges[0]->setPosition(Vector3(17.0f, 2.0f, 5.0f));
-	_oranges[1]->setPosition(Vector3(10.0f, 2.0f, 10.0f));
-	_oranges[2]->setPosition(Vector3(4.0f, 2.0f, 17.0f));
+	_oranges[0].setPosition(17.0f, 2.0f, 5.0f);
+	_oranges[1].setPosition(10.0f, 2.0f, 10.0f);
+	_oranges[2].setPosition(4.0f, 2.0f, 17.0f);
 
 	_activeCamera = _orthogonalCamera;
 
@@ -300,21 +289,21 @@ void GameManager::printDebugCameras(void) {
 // ------------------------------------------------------------
 
 void GameManager::createLights(void) {
-	Vector4* ambient_candle = new Vector4(1.0f, 0.57f, 0.16f, 1.0f);
-	Vector4* diffuse_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	Vector4* specular_candle = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4 ambient_candle = Vector4(1.0f, 0.57f, 0.16f, 1.0f);
+	Vector4 diffuse_candle = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4 specular_candle = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Vector4* ambient_headlight = new Vector4(0.78f, 0.88f, 1.0f, 1.0f);
-	Vector4* diffuse_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	Vector4* specular_headlight = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4 ambient_headlight = Vector4(0.78f, 0.88f, 1.0f, 1.0f);
+	Vector4 diffuse_headlight = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4 specular_headlight = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	DirectionalLightSource* ambient = new DirectionalLightSource(AMBIENT_LIGHT);
-	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(new Vector4(4.0f, 2.0f, 6.0f, 1.0f));
-	PointLightSource* candle_1 = new PointLightSource(CANDLE_1); candle_1->setPosition(new Vector4(15.0f, 2.0f, 3.0f, 1.0f));
-	PointLightSource* candle_2 = new PointLightSource(CANDLE_2); candle_2->setPosition(new Vector4(15.0f, 2.0f, 10.0f, 1.0f));
-	PointLightSource* candle_3 = new PointLightSource(CANDLE_3); candle_3->setPosition(new Vector4(5.0f, 2.0f, 10.0f, 1.0f));
-	PointLightSource* candle_4 = new PointLightSource(CANDLE_4); candle_4->setPosition(new Vector4(5.0f, 2.0f, 18.0f, 1.0f));
-	PointLightSource* candle_5 = new PointLightSource(CANDLE_5); candle_5->setPosition(new Vector4(15.0f, 2.0f, 18.0f, 1.0f));
+	PointLightSource* candle_0 = new PointLightSource(CANDLE_0); candle_0->setPosition(Vector4(44.2f, 2.0f, 10.9f, 1.0f));
+	PointLightSource* candle_1 = new PointLightSource(CANDLE_1); candle_1->setPosition(Vector4(42.0f, 2.0f, 33.8f, 1.0f));
+	PointLightSource* candle_2 = new PointLightSource(CANDLE_2); candle_2->setPosition(Vector4(27.4f, 2.0f, 52.2f, 1.0f));
+	PointLightSource* candle_3 = new PointLightSource(CANDLE_3); candle_3->setPosition(Vector4(19.0f, 2.0f, 38.7f, 1.0f));
+	PointLightSource* candle_4 = new PointLightSource(CANDLE_4); candle_4->setPosition(Vector4(9.3f, 2.0f, 22.2f, 1.0f));
+	PointLightSource* candle_5 = new PointLightSource(CANDLE_5); candle_5->setPosition(Vector4(25.2f, 2.0f, 9.9f, 1.0f));
 	PointLightSource* car_headlight_left = new PointLightSource(CAR_HEADLIGHT_LEFT);
 	PointLightSource* car_headlight_right = new PointLightSource(CAR_HEADLIGHT_RIGHT);
 
@@ -328,11 +317,11 @@ void GameManager::createLights(void) {
 	_lights.push_back(car_headlight_left);
 	_lights.push_back(car_headlight_right);
 
-	ambient->setPosition(new Vector4(1.0f, -1.0f, 0.0f, 0.0f));
+	ambient->setPosition(Vector4(1.0f, -1.0f, 0.0f, 0.0f));
 
-	ambient->setAmbient(new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
-	ambient->setDiffuse(new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
-	ambient->setSpecular(new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
+	ambient->setAmbient(Vector4(0.4f, 0.4f, 0.4f, 1.0f));
+	ambient->setDiffuse(Vector4(0.3f, 0.3f, 0.3f, 1.0f));
+	ambient->setSpecular(Vector4(0.3f, 0.3f, 0.3f, 1.0f));
 	ambient->setState(false);
 	ambient->setIsLocal(false);
 
@@ -348,9 +337,9 @@ void GameManager::createLights(void) {
 			candle->setIsSpot(false);
 			candle->setIsLocal(true);
 
-			candle->setConstantAttenuation(0.01);
+			candle->setConstantAttenuation(0.05);
 			candle->setLinearAttenuation(0);
-			candle->setQuadraticAttenuation(1);
+			candle->setQuadraticAttenuation(0.17);
 
 			k++;
 		}
@@ -402,9 +391,9 @@ void GameManager::update_car_headlights(void) {
 	float newXright = 0.55f * cos(angle * 3.14f / 180.0f) + sin(angle * 3.14f / 180.0f) * 0.15f + car_pos.getX();
 	float newZright = -sin(angle * 3.14f / 180.0f) * 0.55f + cos(angle * 3.14f / 180.0f) * 0.15f + car_pos.getZ();
 
-	Vector4* spot_position_left = new Vector4(newXleft, car_pos.getY(), newZleft, 1.0f);
-	Vector4* spot_position_right = new Vector4(newXright, car_pos.getY(), newZright, 1.0f);
-	Vector4* spot_direction = new Vector4(car_dir.getX(), -0.7f, car_dir.getZ(), 0.0f);
+	Vector4 spot_position_left = Vector4(newXleft, car_pos.getY(), newZleft, 1.0f);
+	Vector4 spot_position_right = Vector4(newXright, car_pos.getY(), newZright, 1.0f);
+	Vector4 spot_direction = Vector4(car_dir.getX(), -0.7f, car_dir.getZ(), 0.0f);
 
 	_lights[CAR_HEADLIGHT_LEFT]->setPosition(spot_position_left);
 	_lights[CAR_HEADLIGHT_LEFT]->setDirection(spot_direction);
@@ -430,6 +419,8 @@ void GameManager::changeSize(int w, int h) {
 	ratio = (1.0f * w) / h;
 	loadIdentity(PROJECTION);
 	perspective(53.13f, ratio, 0.1f, 1000.0f);
+	WinX = w;
+	WinY = h;
 }
 
 void GameManager::timer()
@@ -444,24 +435,23 @@ void GameManager::timer()
 
 void GameManager::increaseSpeed()
 {
-	std::vector<Orange*>::iterator to_up;
+	std::vector<Orange>::iterator to_up;
 	Orange* o;
 	Vector3* pos;
 	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
-		o = static_cast<Orange*>(*to_up);
-		o->increaseSpeed();
+		(*to_up).increaseSpeed();
 	}
 }
 
 void GameManager::updateOranges() {
-	std::vector<Orange*>::iterator to_up;
+	std::vector<Orange>::iterator to_up;
 	Orange* o;
 	Vector3* pos;
 	for (to_up = _oranges.begin(); to_up != _oranges.end(); to_up++) {
-		o = static_cast<Orange*>(*to_up);
-		o->update(_delta_t);
-		if (o->getPosition().getX() > 21.0 || o->getPosition().getX() < 0.0 || o->getPosition().getZ() > 21.0 || o->getPosition().getZ() < 0.0) {
-			o->reset(Vector3(rand() % 8,2.0f, rand() % 8), glutGet(GLUT_ELAPSED_TIME));
+		(*to_up).update(_delta_t);
+		if ((*to_up).getPosition().getX() > tableXMax || (*to_up).getPosition().getX() < tableXMin || (*to_up).getPosition().getZ() > tableZMax || (*to_up).getPosition().getZ() < tableZMin) {
+			float f1 = frand();
+			(*to_up).reset(Vector3(frand(tableXMin, tableXMax), 2.0f, frand(tableZMin, tableZMax)), glutGet(GLUT_ELAPSED_TIME));
 		}
 	}
 }
@@ -477,19 +467,17 @@ void GameManager::refresh()
 void GameManager::updateButters(void)
 {
 	ButterPacket* o;
-	std::vector<ButterPacket*>::iterator to_up;
+	std::vector<ButterPacket>::iterator to_up;
 	for (to_up = _butters.begin(); to_up != _butters.end(); to_up++) {
-		o = static_cast<ButterPacket*>(*to_up);
-		o->update(_delta_t);
+		(*to_up).update(_delta_t);
 	}
 }
 void GameManager::updateCheerios(void)
 {
 	Cheerio* o;
-	std::vector<Cheerio*>::iterator to_up;
+	std::vector<Cheerio>::iterator to_up;
 	for (to_up = _cheerios.begin(); to_up != _cheerios.end(); to_up++) {
-		o = static_cast<Cheerio*>(*to_up);
-		o->update(_delta_t);
+		(*to_up).update(_delta_t);
 	}
 }
 
@@ -504,27 +492,33 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
-	if (_car->getPosition().getX() > 20.0 || _car->getPosition().getX() < 0.0 || _car->getPosition().getZ() > 20.0 || _car->getPosition().getZ() < 0.0) {
+	std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
+	if (_car->getPosition().getX() > tableXMax || _car->getPosition().getX() < tableXMin || _car->getPosition().getZ() > tableZMax || _car->getPosition().getZ() < tableZMin) {
 		_lives -= 1;
-		_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+		_car = new Car(carStartPos);
 		_car->setDirection(1.0f, 0.0f, 0.0f);
 	}
-	for (int i = 0; i < 3; i++) {
-		if (_car->checkColision(_oranges[i])) {
+	int j = _oranges.size();
+	for (int i = 0; i < j; i++) {
+		if (_car->checkColision(&_oranges[i])) {
 			_lives -= 1;
-			_car = new Car(Vector3(1.9f, 1.15f, 3.0f));
+			_car = new Car(carStartPos);
 			_car->setDirection(1.0f, 0.0f, 0.0f);
-			
+
 		}
-		if (_car->checkColision(_butters[i])) {
-			_butters[i]->dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
+	}
+	j = _butters.size();
+	for (int i = 0; i < j; i++) {
+		if (_car->checkColision(&_butters[i])) {
+			_butters[i].dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
 			_car->accelerationStop();
 			_car->dealColision();
 		}
 	}
-	for (int i = 0; i < 20; i++) {
-		if (_car->checkColision(_cheerios[i])) {
-			_cheerios[i]->dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
+	j = _cheerios.size();
+	for (int i = 0; i < j; i++) {
+		if (_car->checkColision(&_cheerios[i])) {
+			_cheerios[i].dealColision(_car->getDirection(), _car->getAcceleration(), _car->getSpeed());
 			_car->accelerationStop();
 			_car->dealColision();
 		}
@@ -793,13 +787,13 @@ GLuint GameManager::setupShaders(void)
 }
 
 void GameManager::createTable(void) {
-	float amb[] = { 0.09f, 0.09f, 0.47f, 1.0f };
-	float diff[] = { 0.09f, 0.09f, 0.47f, 1.0f };
-	float spec[] = { 0.09f, 0.09f, 0.47f, 1.0f };
+	float amb[] = { 0.94f, 0.94f, 0.94f, 1.0f };
+	float diff[] = { 0.94f, 0.94f, 0.94f, 1.0f };
+	float spec[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float shininess = 100.0f;
 	int texcount = 0;
-	objId = TABLE_WHITE_SQUARE;
+	objId = TABLE_SQUARE;
 
 	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
 	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
@@ -807,20 +801,7 @@ void GameManager::createTable(void) {
 	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
-	createCube();
-
-	float amb1[] = { 0.94f, 0.94f, 0.94f, 1.0f };
-	float diff1[] = { 0.94f, 0.94f, 0.94f, 1.0f };
-	float spec1[] = { 0.94f, 0.94f, 0.94f, 1.0f };
-
-	objId = TABLE_BLUE_SQUARE;
-	memcpy(mesh[objId].mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(mesh[objId].mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(mesh[objId].mat.specular, spec1, 4 * sizeof(float));
-	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
-	mesh[objId].mat.shininess = shininess;
-	mesh[objId].mat.texCount = texcount;
-	createCube();
+	createQuad(6, 6);
 }
 
 void GameManager::createCar(void) { 
@@ -919,6 +900,16 @@ void GameManager::createOranges(void) {
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createSphere(ORANGE_RADIUS, 20);
+
+	float oranges_x[] = { 51.0f, 47.0f, 31.6f, 16.8f, 16.9f, 13.6f };
+	float oranges_z[] = { 10.9f, 33.1f, 56.1f, 46.0f, 30.6f, 8.4f };
+	int nOranges = sizeof(oranges_x) / sizeof(float);
+	for (int i = 0; i < nOranges; i++) {
+		_oranges.push_back(Orange(Vector3(oranges_x[i], 2.0f, oranges_z[i])));
+	}
+	for (int i = 0; i < 10; i++) {
+		_oranges.push_back(Orange(Vector3(frand(tableXMin, tableXMax), 2.0f, frand(tableZMin, tableZMax))));
+	}
 }
 
 void GameManager::createButterPackets(void) {
@@ -937,6 +928,13 @@ void GameManager::createButterPackets(void) {
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createCube();
+
+	float butters_x[] = { 47.4f,  49.3f, 37.3f, 16.5f, 14.7f, 24.7f, 9.8f, 11.3f, 26.4f, 31.3f};
+	float butters_z[] = { 17.4f, 33.0f, 49.8f, 54.4f, 43.6f, 33.5f, 26.5f, 8.1f, 5.1f, 15.2f};
+	int nButters = sizeof(butters_x) / sizeof(float);
+	for (int i = 0; i < nButters; i++) {
+		_butters.push_back(ButterPacket(Vector3(butters_x[i], 1.0f, butters_z[i]), 0.5, 0.3));
+	}
 }
 
 void GameManager::createCheerios(void) {
@@ -955,6 +953,13 @@ void GameManager::createCheerios(void) {
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createTorus(0.25f, 1.0f, 20, 20);
+
+	float cheerios_x[] = {29.0f, 29.5f, 30.0f, 29.0f, 29.5f, 30.0f, 33.0f, 36.0f, 39.0f, 42.0f, 45.0f, 48.0f, 51.0f, 53.0f, 54.0f, 54.4f, 53.8f, 33.0f, 36.0f, 39.0f, 42.0f, 45.0f, 47.0f, 47.0f,  52.8f, 45.6f, 42.0f, 50.6f, 48.4f, 45.0f, 42.9f, 42.7f, 39.1f, 37.1f, 36.1f, 36.1f, 38.3f, 40.4f, 42.9f, 44.0f, 45.6f, 47.7f, 49.6f, 51.4f, 51.9f, 44.7f, 44.0f, 51.4f, 51.8f, 51.0f, 49.6f, 44.0f, 43.0f, 39.3f, 45.8f, 42.7f, 39.8f, 35.5f, 33.5f, 30.6f, 37.5f, 36.9f, 29.9f, 30.0f, 27.0f, 35.8f, 33.6f, 31.6f, 28.1f, 23.6f, 20.6f, 18.2f, 24.1f, 20.5f, 17.5f, 14.7f, 11.4f, 8.7f, 15.9f, 16.3f, 18.3f, 8.5f, 9.2f, 11.3f, 13.5f, 16.7f, 21.9f, 25.6f, 28.3f, 29.2f, 19.0f, 20.8f, 20.4f, 18.4f, 28.5f, 26.4f, 15.2f, 12.0f, 8.9f, 24.9f, 22.7f, 19.3f, 16.0f, 13.4f, 11.3f, 5.3f, 3.3f, 1.8f, 1.6f, 1.1f, 9.3f, 8.6f, 7.8f, 7.9f, 0.9f, 1.4f, 1.7f, 8.9f, 10.7f, 12.2f, 14.3f, 17.5f, 19.9f, 22.6f, 26.2f, 25.8f, 22.9f, 19.3f, 16.8f, 13.5f, 10.7f, 8.1f, 6.2f, 4.4f, 2.9f};
+	float cheerios_z[] = {4.0f, 4.0f, 4.0f, 9.0f, 9.0f, 9.0f, 3.8f, 3.6f, 3.4f, 3.2f, 3.0f, 3.4f, 4.6f, 5.8f, 8.0f, 11.0f, 14.0f, 8.8f, 8.6f, 8.4f, 8.2f, 8.0f, 9.4f, 12.0f, 15.0f, 13.7f, 13.8f, 17.3f, 17.9f, 18.6f, 19.6f, 21.9f, 14.9f, 17.6f, 20.8f, 23.9f, 26.8f, 28.9f, 30.4f, 33.6f, 24.3f, 27.3f, 30.7f, 33.3f, 36.7f, 37.2f, 39.0f, 39.4f, 42.3f, 45.0f, 47.8f, 41.7f, 44.8f, 45.5f, 49.6f, 50.5f, 50.8f, 44.8f, 44.8f, 47.1f, 52.0f, 54.9f, 50.2f, 53.7f, 55.2f, 57.9f, 59.3f, 61.6f, 61.9f, 54.9f, 54.8f, 54.4f, 61.1f, 60.4f, 60.3f, 59.9f, 58.7f, 55.8f, 52.6f, 50.0f, 48.6f, 52.3f, 49.2f, 45.7f, 44.1f, 42.6f, 47.2f, 45.3f, 42.9f, 40.7f, 41.0f, 39.3f, 35.8f, 33.6f, 37.4f, 34.4f, 32.0f, 31.9f, 31.9f, 31.3f, 29.4f, 28.5f, 27.2f, 26.6f, 26.5f, 31.4f, 29.7f, 27.9f, 25.2f, 22.9f, 25.3f, 23.5f, 21.0f, 18.9f, 20.2f, 18.5f, 16.9f, 16.6f, 14.6f, 13.2f, 11.7f, 10.5f, 9.6f, 9.4f, 8.9f, 3.7f, 4.0f, 3.9f, 4.6f, 5.2f, 6.8f, 8.5f, 10.5f, 12.6f, 14.9f};
+	int nCheerios = sizeof(cheerios_x) / sizeof(float);
+	for (int i = 0; i < nCheerios; i++) {
+		_cheerios.push_back(Cheerio(Vector3(cheerios_x[i], 1.10f, cheerios_z[i]), -0.125, 0.125));
+	}
 }
 
 void GameManager::createCandleSticks(void) {
@@ -977,7 +982,7 @@ void GameManager::createCandleSticks(void) {
 
 void GameManager::drawTable(void) {
 	GLint loc;
-	objId = TABLE_WHITE_SQUARE;
+	objId = TABLE_SQUARE;
 
 	for (int i = 0; i <= 10; i++) {
 		for (int j = 0; j <= 10; j++) {
@@ -991,96 +996,8 @@ void GameManager::drawTable(void) {
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
-			translate(MODEL, i*2.0f, 0.0f, j*2.0f);
-
-			// send matrices to OGL
-			computeDerivedMatrix(PROJ_VIEW_MODEL);
-			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-			computeNormalMatrix3x3();
-			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-			// Render mesh
-			glBindVertexArray(mesh[objId].vao);
-			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-
-			popMatrix(MODEL);
-		}
-	}
-	for (float i = 0.5; i <= 9.5; i++) {
-		for (float j = 0.5; j <= 9.5; j++) {
-			// send the material
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-			glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-			glUniform4fv(loc, 1, mesh[objId].mat.specular);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-			glUniform1f(loc, mesh[objId].mat.shininess);
-			pushMatrix(MODEL);
-			translate(MODEL, i*2.0f, 0.0f, j*2.0f);
-
-			// send matrices to OGL
-			computeDerivedMatrix(PROJ_VIEW_MODEL);
-			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-			computeNormalMatrix3x3();
-			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-			// Render mesh
-			glBindVertexArray(mesh[objId].vao);
-			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-
-			popMatrix(MODEL);
-		}
-	}
-	objId = TABLE_BLUE_SQUARE;
-	for (float i = 0.5; i <= 9.5; i++) {
-		for (int j = 0; j <= 10; j++) {
-			// send the material
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-			glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-			glUniform4fv(loc, 1, mesh[objId].mat.specular);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-			glUniform1f(loc, mesh[objId].mat.shininess);
-			pushMatrix(MODEL);
-			translate(MODEL, i*2.0f, 0.0f, j*2.0f);
-
-			// send matrices to OGL
-			computeDerivedMatrix(PROJ_VIEW_MODEL);
-			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-			computeNormalMatrix3x3();
-			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-			// Render mesh
-			glBindVertexArray(mesh[objId].vao);
-			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-
-			popMatrix(MODEL);
-		}
-	}
-	for (int i = 0; i <= 10; i++) {
-		for (float j = 0.5; j <= 9.5; j++) {
-			// send the material
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-			glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-			glUniform4fv(loc, 1, mesh[objId].mat.specular);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-			glUniform1f(loc, mesh[objId].mat.shininess);
-			pushMatrix(MODEL);
-			translate(MODEL, i*2.0f, 0.0f, j*2.0f);
-
+			translate(MODEL, i*3*2.0f, 1.0f, j*3*2.0f);
+			rotate(MODEL, 90, -1.0, 0.0, 0.0);
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
 			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
@@ -1378,16 +1295,16 @@ void GameManager::drawOranges(void) {
 	objId = ORANGE;
 	float circumference = 2 * 3.14f * ORANGE_RADIUS;
 	float angle;
-
-	for (int i = 0; i < 3; i++) {
-		angle = _oranges[i]->getAngle();
-		angle += _oranges[i]->getDistanceDone() / circumference * 360;
-		_oranges[i]->setDistanceDone(0);
+	int j = _oranges.size();
+	for (int i = 0; i < j; i++) {
+		angle = _oranges[i].getAngle();
+		angle += _oranges[i].getDistanceDone() / circumference * 360;
+		_oranges[i].setDistanceDone(0);
 		//std::cout << "test: " << angle << std::endl;
-		_oranges[i]->setAngle(angle);
-		float normalized = _oranges[i]->getSpeed().getX() * _oranges[i]->getSpeed().getX() + _oranges[i]->getSpeed().getZ() * _oranges[i]->getSpeed().getZ();
+		_oranges[i].setAngle(angle);
+		float normalized = _oranges[i].getSpeed().getX() * _oranges[i].getSpeed().getX() + _oranges[i].getSpeed().getZ() * _oranges[i].getSpeed().getZ();
 		normalized = sqrt(normalized);
-		Vector3 normalized_speed = Vector3(_oranges[i]->getSpeed().getX() / normalized, 0.0f, _oranges[i]->getSpeed().getZ() / normalized);
+		Vector3 normalized_speed = Vector3(_oranges[i].getSpeed().getX() / normalized, 0.0f, _oranges[i].getSpeed().getZ() / normalized);
 		Vector3 rotation = Vector3(normalized_speed.getZ(), 0.0f, -normalized_speed.getX());
 		// send the material
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
@@ -1399,7 +1316,7 @@ void GameManager::drawOranges(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		translate(MODEL, _oranges[i]->getPosition().getX(), _oranges[i]->getPosition().getY(), _oranges[i]->getPosition().getZ());
+		translate(MODEL, _oranges[i].getPosition().getX(), _oranges[i].getPosition().getY(), _oranges[i].getPosition().getZ());
 		rotate(MODEL, angle, rotation.getX(), rotation.getY(), rotation.getZ());
 		// send matrices to OGL
 		computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -1423,8 +1340,8 @@ void GameManager::drawButterPackets(void) {
 	float z1[] = { 17.0f, 10.0f, 14.0f };
 
 	objId = BUTTER;
-
-	for (int i = 0; i < 3; i++) {
+	int j = _butters.size();
+	for (int i = 0; i < j; i++) {
 		// send the material
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -1435,7 +1352,7 @@ void GameManager::drawButterPackets(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		translate(MODEL, _butters[i]->getPosition().getX(), _butters[i]->getPosition().getY(), _butters[i]->getPosition().getZ());
+		translate(MODEL, _butters[i].getPosition().getX(), _butters[i].getPosition().getY(), _butters[i].getPosition().getZ());
 
 		pushMatrix(MODEL);
 		translate(MODEL, -0.65, 0.0, -0.35);
@@ -1463,7 +1380,8 @@ void GameManager::drawCheerios() {
 	GLint loc;
 	objId = CHEERIO;
 	// send the material
-	for (int i = 0; i < 20; i++) {
+	int nCheerios = _cheerios.size();
+	for (int i = 0; i < nCheerios; i++) {
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 			glUniform4fv(loc, 1, mesh[objId].mat.ambient);
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
@@ -1474,7 +1392,7 @@ void GameManager::drawCheerios() {
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
 			//translate(MODEL, 5.5f - j * 2.7, 1.10f, -7.3f + i * 0.95);
-			translate(MODEL, _cheerios[i]->getPosition().getX(), _cheerios[i]->getPosition().getY(), _cheerios[i]->getPosition().getZ());
+			translate(MODEL, _cheerios[i].getPosition().getX(), _cheerios[i].getPosition().getY(), _cheerios[i].getPosition().getZ());
 			translate(MODEL, -0.125, 0.0, -0.125);
 			scale(MODEL, 0.25f, 0.25f, 0.25f);
 
@@ -1508,7 +1426,7 @@ void GameManager::drawCandleSticks() {
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
-			translate(MODEL, _lights[i]->getPosition()->getX(), 1.0f, _lights[i]->getPosition()->getZ());
+			translate(MODEL, _lights[i]->getPosition().getX(), 1.0f, _lights[i]->getPosition().getZ());
 			scale(MODEL, 0.3f, 0.7f, 0.3f);
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -1531,16 +1449,33 @@ void GameManager::setUpLights(void) {
 	GLint loc;
 
 	float res[4];
-	multMatrixPoint(VIEW, _lights[0]->getPosition()->getArray(), res);
+	float faux[4];
+	faux[0] = _lights[0]->getPosition().getX();
+	faux[1] = _lights[0]->getPosition().getY();
+	faux[2] = _lights[0]->getPosition().getZ();
+	faux[3] = _lights[0]->getPosition().getW();
+	multMatrixPoint(VIEW, faux, res);
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].direction");
 	glUniform4fv(loc, 1, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].ambient");
-	glUniform4fv(loc, 1, _lights[0]->getAmbient()->getArray());
+	faux[0] = _lights[0]->getAmbient().getX();
+	faux[1] = _lights[0]->getAmbient().getY();
+	faux[2] = _lights[0]->getAmbient().getZ();
+	faux[3] = _lights[0]->getAmbient().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].diffuse");
-	glUniform4fv(loc, 1, _lights[0]->getDiffuse()->getArray());
+	faux[0] = _lights[0]->getDiffuse().getX();
+	faux[1] = _lights[0]->getDiffuse().getY();
+	faux[2] = _lights[0]->getDiffuse().getZ();
+	faux[3] = _lights[0]->getDiffuse().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].specular");
-	glUniform4fv(loc, 1, _lights[0]->getSpecular()->getArray());
+	faux[0] = _lights[0]->getSpecular().getX();
+	faux[1] = _lights[0]->getSpecular().getY();
+	faux[2] = _lights[0]->getSpecular().getZ();
+	faux[3] = _lights[0]->getSpecular().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isEnabled");
 	glUniform1i(loc, _lights[0]->getState());
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[0].isLocal");
@@ -1569,17 +1504,34 @@ void GameManager::setUpLights(void) {
 
 		fin = beg + std::to_string(i) + end + types[3];
 		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
-		glUniform4fv(loc, 1, light->getAmbient()->getArray());
+		faux[0] = light->getAmbient().getX();
+		faux[1] = light->getAmbient().getY();
+		faux[2] = light->getAmbient().getZ();
+		faux[3] = light->getAmbient().getW();
+		glUniform4fv(loc, 1, faux);
 
 		fin = beg + std::to_string(i) + end + types[4];
 		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
-		glUniform4fv(loc, 1, light->getDiffuse()->getArray());
+		faux[0] = light->getDiffuse().getX();
+		faux[1] = light->getDiffuse().getY();
+		faux[2] = light->getDiffuse().getZ();
+		faux[3] = light->getDiffuse().getW();
+		glUniform4fv(loc, 1, faux);
 
 		fin = beg + std::to_string(i) + end + types[5];
 		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
-		glUniform4fv(loc, 1, light->getSpecular()->getArray());
+		faux[0] = light->getSpecular().getX();
+		faux[1] = light->getSpecular().getY();
+		faux[2] = light->getSpecular().getZ();
+		faux[3] = light->getSpecular().getW();
+		glUniform4fv(loc, 1, faux);
 
-		multMatrixPoint(VIEW, light->getPosition()->getArray(), res);
+
+		faux[0] = light->getPosition().getX();
+		faux[1] = light->getPosition().getY();
+		faux[2] = light->getPosition().getZ();
+		faux[3] = light->getPosition().getW();
+		multMatrixPoint(VIEW, faux, res);
 		fin = beg + std::to_string(i) + end + types[6];
 		loc = glGetUniformLocation(shader.getProgramIndex(), fin.c_str());
 		glUniform3fv(loc, 1, res);
@@ -1605,16 +1557,37 @@ void GameManager::setUpLights(void) {
 	glUniform1i(loc, car_headlight_left->getIsSpot());
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].ambient");
-	glUniform4fv(loc, 1, car_headlight_left->getAmbient()->getArray());
+	faux[0] = car_headlight_left->getAmbient().getX();
+	faux[1] = car_headlight_left->getAmbient().getY();
+	faux[2] = car_headlight_left->getAmbient().getZ();
+	faux[3] = car_headlight_left->getAmbient().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].diffuse");
-	glUniform4fv(loc, 1, car_headlight_left->getDiffuse()->getArray());
+	faux[0] = car_headlight_left->getDiffuse().getX();
+	faux[1] = car_headlight_left->getDiffuse().getY();
+	faux[2] = car_headlight_left->getDiffuse().getZ();
+	faux[3] = car_headlight_left->getDiffuse().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].specular");
-	glUniform4fv(loc, 1, car_headlight_left->getSpecular()->getArray());
+	faux[0] = car_headlight_left->getSpecular().getX();
+	faux[1] = car_headlight_left->getSpecular().getY();
+	faux[2] = car_headlight_left->getSpecular().getZ();
+	faux[3] = car_headlight_left->getSpecular().getW();
+	glUniform4fv(loc, 1, faux);
 
-	multMatrixPoint(VIEW, car_headlight_left->getPosition()->getArray(), res);
+
+	faux[0] = car_headlight_left->getPosition().getX();
+	faux[1] = car_headlight_left->getPosition().getY();
+	faux[2] = car_headlight_left->getPosition().getZ();
+	faux[3] = car_headlight_left->getPosition().getW();
+	multMatrixPoint(VIEW, faux, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].position");
 	glUniform4fv(loc, 1, res);
-	multMatrixPoint(VIEW, car_headlight_left->getDirection()->getArray(), res);
+	faux[0] = car_headlight_left->getDirection().getX();
+	faux[1] = car_headlight_left->getDirection().getY();
+	faux[2] = car_headlight_left->getDirection().getZ();
+	faux[3] = car_headlight_left->getDirection().getW();
+	multMatrixPoint(VIEW, faux, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[7].direction");
 	glUniform4fv(loc, 1, res);
 
@@ -1641,16 +1614,38 @@ void GameManager::setUpLights(void) {
 	glUniform1i(loc, car_headlight_right->getIsSpot());
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].ambient");
-	glUniform4fv(loc, 1, car_headlight_right->getAmbient()->getArray());
+	faux[0] = car_headlight_right->getAmbient().getX();
+	faux[1] = car_headlight_right->getAmbient().getY();
+	faux[2] = car_headlight_right->getAmbient().getZ();
+	faux[3] = car_headlight_right->getAmbient().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].diffuse");
-	glUniform4fv(loc, 1, car_headlight_right->getDiffuse()->getArray());
+	faux[0] = car_headlight_right->getDiffuse().getX();
+	faux[1] = car_headlight_right->getDiffuse().getY();
+	faux[2] = car_headlight_right->getDiffuse().getZ();
+	faux[3] = car_headlight_right->getDiffuse().getW();
+	glUniform4fv(loc, 1, faux);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].specular");
-	glUniform4fv(loc, 1, car_headlight_right->getSpecular()->getArray());
+	faux[0] = car_headlight_right->getSpecular().getX();
+	faux[1] = car_headlight_right->getSpecular().getY();
+	faux[2] = car_headlight_right->getSpecular().getZ();
+	faux[3] = car_headlight_right->getSpecular().getW();
+	glUniform4fv(loc, 1, faux);
 
-	multMatrixPoint(VIEW, car_headlight_right->getPosition()->getArray(), res);
+
+	faux[0] = car_headlight_right->getPosition().getX();
+	faux[1] = car_headlight_right->getPosition().getY();
+	faux[2] = car_headlight_right->getPosition().getZ();
+	faux[3] = car_headlight_right->getPosition().getW();
+	multMatrixPoint(VIEW, faux, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].position");
 	glUniform4fv(loc, 1, res);
-	multMatrixPoint(VIEW, car_headlight_right->getDirection()->getArray(), res);
+
+	faux[0] = car_headlight_right->getDirection().getX();
+	faux[1] = car_headlight_right->getDirection().getY();
+	faux[2] = car_headlight_right->getDirection().getZ();
+	faux[3] = car_headlight_right->getDirection().getW();
+	multMatrixPoint(VIEW, faux, res);
 	loc = glGetUniformLocation(shader.getProgramIndex(), "lights[8].direction");
 	glUniform4fv(loc, 1, res);
 
@@ -1921,13 +1916,13 @@ float GameManager::innerProduct(float* v1, float* v2) {
 
 void GameManager::initParticles() {
 	GLfloat v, theta, phi;
-	std::vector<Particle*>::iterator j;
+	std::vector<Particle>::iterator j;
 	for (j = _particles.begin(); j != _particles.end(); j++) {
 		v = 0.8*frand() + 0.2;
 		phi = frand()*M_PI;
 		theta = 2.0*frand()*M_PI;
 
-		(*j)->resetValues(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
+		(*j).resetValues(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
 			0.1f, -0.15f, 0.0f, 0.882f, 0.552f, 0.211f, 1.0f, 0.005f);
 	}
 }
@@ -1940,20 +1935,26 @@ void GameManager::createParticles(int nParticles) {
 		phi = frand()*M_PI;
 		theta = 2.0*frand()*M_PI;
 
-		_particles.push_back(new Particle(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
+		_particles.push_back(Particle(5.0f, 5.0f, 5.0f, v * cos(theta) * sin(phi), v * cos(phi), v * sin(theta) * sin(phi),
 			0.1f, -0.15f, 0.0f, 0.882f, 0.552f, 0.211f, 1.0f, 0.005f));
 	}
 }
 
 void GameManager::updateParticles(float delta_t) {
-	std::vector<Particle*>::iterator j;
-	for (j = _particles.begin(); j != _particles.end(); j++) {
-		(*j)->update(delta_t);
+	for (std::vector<Particle>::iterator j = _particles.begin(); j != _particles.end(); j++) {
+		(*j).update(delta_t);
 	}
 }
 
 float GameManager::frand() {
 	return (float)rand() / RAND_MAX;
+}
+
+float GameManager::frand(float min, float max) {
+	float random = ((float)rand()) / (float)RAND_MAX;
+	float diff = max - min;
+	float r = random * diff;
+	return min + r;
 }
 
 void GameManager::iterate() {
@@ -1978,22 +1979,21 @@ void GameManager::drawParticleQuad() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	glDisable(GL_DEPTH_TEST);
 	float particle_color[4];
-	std::vector<Particle*>::iterator i;
-	for (i = _particles.begin(); i != _particles.end(); i++) {
-		if ((*i)->getLife() > 0.0f) {
+	for (std::vector<Particle>::iterator i = _particles.begin(); i != _particles.end(); i++) {
+		if ((*i).getLife() > 0.0f) {
 
-			particle_color[0] = (*i)->getColor()->getX();
-			particle_color[1] = (*i)->getColor()->getY();
-			particle_color[2] = (*i)->getColor()->getZ();
-			particle_color[3] = (*i)->getLife();
+			particle_color[0] = (*i).getColor().getX();
+			particle_color[1] = (*i).getColor().getY();
+			particle_color[2] = (*i).getColor().getZ();
+			particle_color[3] = (*i).getLife();
 
 			// send the material - diffuse color modulated with texture
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
 			glUniform4fv(loc, 1, particle_color);
 
 			pushMatrix(MODEL);
-			translate(MODEL, (*i)->getPosition()->getX(), (*i)->getPosition()->getY(), (*i)->getPosition()->getZ());
-			billboardRotation((*i)->getPosition()->getX(), (*i)->getPosition()->getY(), (*i)->getPosition()->getZ());
+			translate(MODEL, (*i).getPosition().getX(), (*i).getPosition().getY(), (*i).getPosition().getZ());
+			//billboardRotation((*i).getPosition().getX(), (*i).getPosition().getY(), (*i).getPosition().getZ());
 
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);

@@ -8,7 +8,7 @@ class Vector4: public Vector3 {
 		Vector4();
 		Vector4(float in_x, float in_y, float in_z, float in_w);
 		~Vector4();
-		float getW();
+		float getW() const;
 		void set(float in_x, float in_y, float in_z, float in_w);
 		float* getArray();
 		/*Vector4 operator=(const Vector4 & in_vec);

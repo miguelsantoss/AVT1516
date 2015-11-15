@@ -120,6 +120,7 @@ class GameManager {
 
 		GLuint _texCoordBuffer, _ftexCoordBuffer;
 		GLuint _vertexBuffer, _fvertexBuffer;
+		GLuint uniColor;
 
 		float _fontSize;
 		// Camera Position
@@ -145,11 +146,13 @@ class GameManager {
 		/// The normal matrix
 		float mNormal3x3[9];*/
 		void createTable(void);
+		void createMilk(void);
 		void createCar(void);
 		void createOranges(void);
 		void createButterPackets(void);
 		void createCheerios(void);
 		void createCandleSticks(void);
+		void drawMilk(void);
 		void createTreeSquare(void);
 		void createParticleQuad(void);
 		void createLensFlareQuad(void);
@@ -158,8 +161,11 @@ class GameManager {
 		void drawTable(void);
 		void drawOranges(void);
 		void drawCar(void);
+		void drawCarReflect(void);
 		void drawButterPackets(void);
+		void drawButterPacketsReflect(void);
 		void drawCheerios(void);
+		void drawCheeriosReflect();
 		void drawCandleSticks(void);
 		void drawTreeSquare(void);
 		void drawParticleQuad(void);

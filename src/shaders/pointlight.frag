@@ -47,6 +47,8 @@ uniform int texMode;
 uniform bool sun;
 uniform bool flare;
 
+uniform vec3 overrideColor;
+
 uniform int fogState;
 uniform int fogMode;
 uniform vec3 fogColor;
@@ -149,7 +151,7 @@ void main() {
 				reflectedLight += lights[light].ambient.rgb * mat.specular.rgb * specular * attenuation;
 
 			}
-			vec3 frag_rgb = min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
+			vec3 frag_rgb = overrideColor * min((mat.emissive.rgb + scatteredLight + reflectedLight)*tex.rgb, vec3(1.0));
 			if (fogState == 1) {
 				frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
 			}

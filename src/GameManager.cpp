@@ -25,6 +25,7 @@ const int TREE_QUAD = 10;
 const int PARTICLE_QUAD = 11;
 const int LENSFLARE_QUAD = 12;
 const int SUN_QUAD = 13;
+const int MILK_SQUARE = 14;
 
 const int AMBIENT_LIGHT = 0;
 const int CANDLE_0 = 1;
@@ -83,7 +84,7 @@ void GameManager::init(void)
 	_car = new Car(carStartPos);
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
-	glGenTextures(11, TextureArray);
+	glGenTextures(12, TextureArray);
 
 	TGA_Texture(TextureArray, "textures/test.tga", 0);
 	TGA_Texture(TextureArray, "textures/lightwood.tga", 1);
@@ -96,11 +97,13 @@ void GameManager::init(void)
 	TGA_Texture(TextureArray, "textures/lens_flare/Flare4.tga", 8);
 	TGA_Texture(TextureArray, "textures/lens_flare/Sun.tga", 9);
 	TGA_Texture(TextureArray, "textures/lens_flare/SunLight.tga", 10);
+	TGA_Texture(TextureArray, "textures/milk.tga", 11);
 
 	_fontSize = 16;
 
 	createLights();
 	createTable();
+	createMilk();
 	createButterPackets();
 	createOranges();
 	createCar();
@@ -252,6 +255,9 @@ void GameManager::renderScene(void)
 	glActiveTexture(GL_TEXTURE10);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[10]);
 
+	glActiveTexture(GL_TEXTURE10);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[11]);
+
 	glUniform1i(particleMode, 0);
 
 	glUniform1f(fogDensity, _fogDensity);
@@ -263,12 +269,44 @@ void GameManager::renderScene(void)
 	glUniform1i(tex_loc_1, 0);
 	glUniform1i(tex_loc_2, 1);
 	glUniform1i(texUse, 1);
+	glDepthMask(GL_FALSE);
 	drawTable();
-	glUniform1i(tex_loc_1, 1);
+	glDepthMask(GL_TRUE);
 	glUniform1i(texMode, 2);
+	glUniform1i(tex_loc_1, 11);
+	glEnable(GL_STENCIL_TEST);
+
+		// Draw floor
+		glStencilFunc(GL_ALWAYS, 1, 0xFF); // Set any stencil to 1
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilMask(0xFF); // Write to stencil buffer
+		glDepthMask(GL_FALSE); // Don't write to depth buffer
+		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
+		glEnable(GL_CULL_FACE);
+		drawMilk();
+		glDisable(GL_CULL_FACE);
+		// Draw cube reflection
+		glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
+		glStencilMask(0x00); // Don't write anything to stencil buffer
+		glDepthMask(GL_TRUE); // Write to depth buffer
+			glUniform1i(texUse, 0);
+				glUniform3f(uniColor, 0.4f, 0.4f, 0.4f);	
+					drawButterPacketsReflect();
+					drawCheeriosReflect();
+					drawCarReflect();
+				glUniform3f(uniColor, 1.0f, 1.0f, 1.0f);
+			glUniform1i(texUse, 1);
+
+	glDisable(GL_STENCIL_TEST);
+
+
+
+
+	glUniform1i(tex_loc_1, 1);
 	drawOranges();
 	
 	glUniform1i(texUse, 0);
+
 	drawButterPackets();
 	drawCheerios();
 	
@@ -841,6 +879,7 @@ GLuint GameManager::setupShaders(void)
 	particleMode = glGetUniformLocation(shader.getProgramIndex(), "particleMode");
 	sun = glGetUniformLocation(shader.getProgramIndex(), "sun");
 	flares = glGetUniformLocation(shader.getProgramIndex(), "flares");
+	uniColor = glGetUniformLocation(shader.getProgramIndex(), "overrideColor");
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -852,6 +891,9 @@ void GameManager::createTable(void) {
 	float amb[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float diff[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float spec[] = { 0.94f, 0.94f, 0.94f, 1.0f };
+	/*float amb[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float diff[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float spec[] = { 0.0f, 0.0f, 0.0f, 1.0f };*/
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float shininess = 100.0f;
 	int texcount = 0;
@@ -864,6 +906,27 @@ void GameManager::createTable(void) {
 	mesh[objId].mat.shininess = shininess;
 	mesh[objId].mat.texCount = texcount;
 	createQuad(6, 6);
+}
+
+void GameManager::createMilk(void) {
+	/*float amb[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float diff[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float spec[] = { 1.0f, 1.0f, 1.0f, 1.0f };*/
+	float amb[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float diff[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float spec[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 100.0f;
+	int texcount = 0;
+	objId = MILK_SQUARE;
+
+	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.specular, spec, 4 * sizeof(float));
+	memcpy(mesh[objId].mat.emissive, emissive, 4 * sizeof(float));
+	mesh[objId].mat.shininess = shininess;
+	mesh[objId].mat.texCount = texcount;
+	createQuad(3, 3);
 }
 
 void GameManager::createCar(void) { 
@@ -1042,6 +1105,40 @@ void GameManager::createCandleSticks(void) {
 	createCylinder(2.0f, 1.0f, 30);
 }
 
+void GameManager::drawMilk(void) {
+	GLint loc;
+	objId = MILK_SQUARE;
+	float x[6] = {12.0f, 12.0f, 45.0f, 50.0f, 45.0f, 35.0f  };
+	float z[6] = {10.0f, 50.0f, 30.0f, 10.0f, 50.0f, 53.0f};
+	for (int i = 0; i < 6; i++) {
+		// send the material
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
+		pushMatrix(MODEL);
+		translate(MODEL, x[i], 1.5f, z[i]);
+		rotate(MODEL, 90, -1.0, 0.0, 0.0);
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		popMatrix(MODEL);
+	}
+}
+
 void GameManager::drawTable(void) {
 	GLint loc;
 	objId = TABLE_SQUARE;
@@ -1076,6 +1173,8 @@ void GameManager::drawTable(void) {
 		}
 	}
 }
+
+
 
 void GameManager::drawCar(void) {
 	GLint loc;
@@ -1349,6 +1448,279 @@ void GameManager::drawCar(void) {
 	popMatrix(MODEL);
 }
 
+void GameManager::drawCarReflect(void) {
+	GLint loc;
+	objId = CAR_BODY;
+	Vector3 a = _car->getPosition();
+	double angle = _car->getAngle();
+	float translatef[] = { 0.0, 0.0, 0.0 };
+	float scalef = 0.3f;
+	float rotatef[] = { 90.0f, 1.0, 0.0, 0.0f };
+
+	float wheel_r[] = { 0.3f, 1.1f };
+	pushMatrix(MODEL);
+	
+	translate(MODEL, a.getX(), a.getY()-0.1, a.getZ());
+	scale(MODEL, 1, -1, 1);
+	scale(MODEL, 0.5f, 0.5f, 0.5f);
+
+	rotate(MODEL, angle, 0, 1, 0);
+	translate(MODEL, -0.7, 0.0, -0.5);
+	// send the material
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+	glUniform4fv(loc, 1, mesh[objId].mat.specular);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+	glUniform1f(loc, mesh[objId].mat.shininess);
+	pushMatrix(MODEL);
+	scale(MODEL, 1.4f, 0.5f, 1.0f);
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	pushMatrix(MODEL);
+	translate(MODEL, 0.13f, 1.55f, 0.13f);
+	scale(MODEL, 0.74f, 0.05f, 0.74f);
+
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+
+	objId = Windows;
+	{
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
+		pushMatrix(MODEL);
+		translate(MODEL, 0.15f, 1.1f, 0.15f);
+		rotate(MODEL, -90.0f, 1.0f, 0.0f, 0.0f);
+		scale(MODEL, 0.7f, 0.02f, 0.45f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+
+		pushMatrix(MODEL);
+		translate(MODEL, 0.15f, 1.55f, 0.85f);
+		rotate(MODEL, 90.0f, 1.0f, 0.0f, 0.0f);
+		scale(MODEL, 0.7f, 0.02f, 0.45f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+
+		pushMatrix(MODEL);
+		translate(MODEL, 0.15f, 1.55f, 0.13f);
+		rotate(MODEL, 90.0f, 1.0f, 0.0f, 0.0f);
+		rotate(MODEL, 90.0f, 0.0f, 0.0f, 1.0f);
+		scale(MODEL, 0.74f, 0.02f, 0.45f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+
+		pushMatrix(MODEL);
+		translate(MODEL, 0.87f, 1.55f, 0.13f);
+		rotate(MODEL, 90.0f, 1.0f, 0.0f, 0.0f);
+		rotate(MODEL, 90.0f, 0.0f, 0.0f, 1.0f);
+		scale(MODEL, 0.74f, 0.02f, 0.45f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+	}
+
+	objId = CAR_HEADLIGHT;
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+	glUniform4fv(loc, 1, mesh[objId].mat.specular);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+	glUniform1f(loc, mesh[objId].mat.shininess);
+	{
+		pushMatrix(MODEL);
+		translate(MODEL, 1.0f, 0.7f, 0.2f);
+		rotate(MODEL, 90.0f, 0.0f, 0.0f, 1.0f);
+		scale(MODEL, scalef, scalef, scalef);
+		scale(MODEL, 0.6, 0.6, 0.6);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		pushMatrix(MODEL);
+		translate(MODEL, 0.0f, 0.0f, 3.3f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+	}
+	objId = CAR_TAILIGHT;
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+	glUniform4fv(loc, 1, mesh[objId].mat.specular);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+	glUniform1f(loc, mesh[objId].mat.shininess);
+	{
+		pushMatrix(MODEL);
+		translate(MODEL, 0.0f, 5.6f, 0.0f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		pushMatrix(MODEL);
+		translate(MODEL, 0.0f, 0.0f, 3.3f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+		popMatrix(MODEL);
+	}
+
+
+	popMatrix(MODEL);
+	popMatrix(MODEL);
+
+
+	objId = CAR_WHEEL;
+	for (int i = 0; i < 4; i++) {
+		// send the material
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
+
+		pushMatrix(MODEL);
+		if (i <= 1) translate(MODEL, wheel_r[i], 0.15, -0.1);
+		else translate(MODEL, wheel_r[i - 2], 0.15, 1.1f);
+		if (i == 1 || i == 3) {
+			rotate(MODEL, _car->getWeelAngle(), 0.0, 1.0, 0.0);
+		}
+		scale(MODEL, scalef, scalef, scalef);
+		rotate(MODEL, rotatef[0], rotatef[1], rotatef[2], rotatef[3]);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		popMatrix(MODEL);
+	}
+	popMatrix(MODEL);
+}
+
 void GameManager::drawOranges(void) {
 	GLint loc;
 	float x[] = { -7.0f, 2.0f, 8.0f };
@@ -1438,6 +1810,49 @@ void GameManager::drawButterPackets(void) {
 	}
 }
 
+void GameManager::drawButterPacketsReflect(void) {
+	GLint loc;
+	float x1[] = { 2.0f, 13.0f, 18.0f };
+	float z1[] = { 17.0f, 10.0f, 14.0f };
+
+	objId = BUTTER;
+	int j = _butters.size();
+	for (int i = 0; i < j; i++) {
+		// send the material
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
+		pushMatrix(MODEL);
+		translate(MODEL, _butters[i].getPosition().getX(), _butters[i].getPosition().getY(), _butters[i].getPosition().getZ());
+
+		pushMatrix(MODEL);
+		
+		translate(MODEL, -0.65, -0.5, -0.35);
+		scale(MODEL, 1.3f, 0.5f, 0.7f);
+
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		popMatrix(MODEL);
+		popMatrix(MODEL);
+	}
+}
+
 void GameManager::drawCheerios() {
 	GLint loc;
 	objId = CHEERIO;
@@ -1474,6 +1889,42 @@ void GameManager::drawCheerios() {
 	}
 }
 
+void GameManager::drawCheeriosReflect() {
+	GLint loc;
+	objId = CHEERIO;
+	// send the material
+	int nCheerios = _cheerios.size();
+	for (int i = 0; i < nCheerios; i++) {
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
+		pushMatrix(MODEL);
+		//translate(MODEL, 5.5f - j * 2.7, 1.10f, -7.3f + i * 0.95);
+		translate(MODEL, _cheerios[i].getPosition().getX(), _cheerios[i].getPosition().getY()-0.2, _cheerios[i].getPosition().getZ());
+		translate(MODEL, -0.125, 0.0, -0.125);
+		scale(MODEL, 0.25f, 0.25f, 0.25f);
+
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		popMatrix(MODEL);
+	}
+}
+
 void GameManager::drawCandleSticks() {
 	GLint loc;
 	objId = CANDLE_STICK;
@@ -1488,8 +1939,8 @@ void GameManager::drawCandleSticks() {
 			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 			glUniform1f(loc, mesh[objId].mat.shininess);
 			pushMatrix(MODEL);
-			translate(MODEL, _lights[i]->getPosition().getX(), 1.0f, _lights[i]->getPosition().getZ());
-			scale(MODEL, 0.3f, 0.7f, 0.3f);
+			translate(MODEL, _lights[i]->getPosition().getX(), 1.5f, _lights[i]->getPosition().getZ());
+			scale(MODEL, 0.3f, 0.5f, 0.3f);
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
 			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);

@@ -184,6 +184,7 @@ class GameManager {
 		void updateParticles(float delta_t);
 		void flareInit(int nFlares);
 		float flareRange(float a, float b);
+		void loadFlareFile(char* filename);
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);
 		void normalize(float* v);

@@ -294,7 +294,7 @@ void GameManager::renderScene(void)
 		glUniform1i(tex_loc_2, 10);
 		drawSunQuad();
 		glUniform1i(sun, 0);
-		glUniform1i(particleMode, 0);
+		glUniform1i(particleMode, 1);
 		glUniform1i(flares, 1);
 		glUniform1i(vWriteMode, 1);
 		glUniform1i(tex_loc_1, 5);
@@ -315,6 +315,7 @@ void GameManager::renderScene(void)
 
 	s = "Lives:" + std::to_string(_lives);
 	DrawString(635, 580, s);
+	DrawString(sun_pos_x-20, sun_pos_y-5, "sun");
 	_fontSize = 25;
 	if (_paused) {
 		DrawString(345, 280, "Paused!");
@@ -2089,7 +2090,7 @@ void GameManager::createLensFlareQuad() {
 	glBindVertexArray(_vaoFlareID);
 	glGenBuffers(1, &_fvertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, _fvertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, &vertices[0], GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(VERTEX_ATTRIB1);
 	glVertexAttribPointer(VERTEX_ATTRIB1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -2123,51 +2124,19 @@ void GameManager::createSunQuad() {
 }
 
 void GameManager::drawLensFlareQuad() {
-	/*
-	
-	for (int i = 0; i < _flare.size(); i++) {
-		glUniform1i(tex_loc_1, _flare[i].getTextureIndice());
-		px = (1.0f - _flare[i].getDistance())*lx + _flare[i].getDistance()*dx;
-		py = (1.0f - _flare[i].getDistance())*ly + _flare[i].getDistance()*dy;
-
-		width = (flaredist * flarescale * _flare[i].getSize()) / maxflaredist;
-		if (width > flaremaxsize)
-			width = flaremaxsize;
-		height = (320 * width*WinY) / (240 * WinX);
-		if (width > 1) {
-			pushMatrix(MODEL);
-
-			translate(MODEL, px - width / 2, py - height / 2, 0.0f);
-			scale(MODEL, width, height, 1.0f);
-
-			computeDerivedMatrix(PROJ_VIEW_MODEL);
-
-			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-			computeNormalMatrix3x3();
-			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-			// Render mesh
-			glBindVertexArray(mesh[objId].vao);
-			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-			popMatrix(MODEL);
-		}
-	}*/
-
 	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
 	float lx = sun_pos_x, ly = sun_pos_y;
 	float cx = WinX / 2, cy = WinY / 2;
 	float     dx, dy;          // Screen coordinates of "destination"
 	float     px, py;          // Screen coordinates of flare element
-	float     maxflaredist, flaredist, flaremaxsize, flarescale;
-	float     width, height, alpha;    // Piece parameters;
+	float     maxflaredist, flaredist, flaremaxsize, flarescale, distscale;
+	float     width, height, color[4];    // Piece parameters;
 	float     i;
 
 	maxflaredist = sqrt(cx*cx + cy*cy);
 	flaredist = sqrt((lx - cx)*(lx - cx) + (ly - cy)*(ly - cy));
-	flaredist = maxflaredist - flaredist;
+	distscale = (maxflaredist - flaredist) / maxflaredist;
 	flaremaxsize = WinX * flareMaxSize;
 	flarescale = WinX * flareScale;
 
@@ -2175,6 +2144,12 @@ void GameManager::drawLensFlareQuad() {
 	dy = cy + (cy - ly);
 
 	float texCoords[8] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f
+	};
+	float vertices[8] = {
 		0.0f, 0.0f,
 		1.0f, 0.0f,
 		1.0f, 1.0f,
@@ -2191,15 +2166,38 @@ void GameManager::drawLensFlareQuad() {
 		px = (1.0f - _flare[i].getDistance())*lx + _flare[i].getDistance()*dx;
 		py = (1.0f - _flare[i].getDistance())*ly + _flare[i].getDistance()*dy;
 
-		width = (flaredist * flarescale * _flare[i].getSize()) / maxflaredist;
+		width = _flare[i].getSize() * distscale * flareScale;
 		if (width > flaremaxsize)
 			width = flaremaxsize;
-		height = (320 * width*WinY) / (240 * WinX);
+		height = width * (WinX / WinY);
 		if (width > 1) {
 			pushMatrix(MODEL);
 
+			vertices[0] = 0.0f;
+			vertices[1] = 0.0f;
+
+			vertices[2] = width;
+			vertices[3] = 0.0f;
+
+			vertices[4] = width;
+			vertices[5] = height;
+
+			vertices[6] = 0.0f;
+			vertices[7] = height;
+
+			glBindBuffer(GL_ARRAY_BUFFER, _fvertexBuffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, &vertices[0]);
+
+			color[0] = _flare[i].getColor().getX();
+			color[1] = _flare[i].getColor().getY();
+			color[2] = _flare[i].getColor().getZ();
+			color[3] = _flare[i].getColor().getW() * distscale * distscale;
+			
+			//std::cout << "pos flare " << "x: " << px << " y: " << py << std::endl;
+			std::cout << "size flare " << "x: " << width << " y: " << height << std::endl;
+
+			glUniform4fv(glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse"), 1, color);
 			translate(MODEL, px - width / 2, py - height / 2, 0.0f);
-			scale(MODEL, width, height, 1.0f);
 
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
 			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
@@ -2210,13 +2208,9 @@ void GameManager::drawLensFlareQuad() {
 		
 	}
 	glBindVertexArray(0);
-	
 
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-
 }
 
 void GameManager::drawSunQuad() {
@@ -2224,7 +2218,7 @@ void GameManager::drawSunQuad() {
 	objId = SUN_QUAD;
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	//glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
 	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
@@ -2261,6 +2255,8 @@ void GameManager::drawSunQuad() {
 	gluProject(sunp[0], sunp[1], sunp[2], viewd, projd, viewp, &winx, &winy, &winz);
 	sun_pos_x = winx;
 	sun_pos_y = winy;
+	if (sun_pos_y <= 400)
+		sun_pos_y = -500;
 
 	// Render mesh
 	glBindVertexArray(mesh[objId].vao);
@@ -2268,37 +2264,21 @@ void GameManager::drawSunQuad() {
 	glBindVertexArray(0);
 	popMatrix(MODEL);
 
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GameManager::flareInit(int nFlares) {
 	float FracDist = 1.0f / (float)(nFlares - 1);
-	float dist;
 
-	dist = (FracDist * 0) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
-
-	dist = (FracDist * 1) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
-
-	dist = (FracDist * 2) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 7));
-
-	dist = (FracDist * 3) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
-
-	dist = (FracDist * 4) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
-
-	dist = (FracDist * 5) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 6));
-
-	dist = (FracDist * 6) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 7));
-
-	dist = (FracDist * 7) + flareRange(0, FracDist);
-	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 8));
+	_flare.push_back(FlareElement(1.0f, 1.0f, 0.0f, 1.0f, 0.01f, 900.0f, 5));
+	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.07f, 800.0f, 5));
+	_flare.push_back(FlareElement(1.0f, 0.0f, 1.0f, 1.0f, 0.10f, 800.0f, 7));
+	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.20f, 500.0f, 5));
+	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.30f, 700.0f, 5));
+	_flare.push_back(FlareElement(1.0f, 1.0f, 0.0f, 1.0f, 0.25f, 700.0f, 6));
+	_flare.push_back(FlareElement(1.0f, 0.0f, 1.0f, 1.0f, 0.35f, 500.0f, 7));
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, 1.0f, 0.25f, 1000.0f, 8));
 }
 
 float GameManager::flareRange(float a, float b) {

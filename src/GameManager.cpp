@@ -2,6 +2,7 @@
 #include <GL/freeglut.h>
 #include <ctime>
 #include <math.h>
+#include <array>
 
 #include "GameManager.h"
 #include "TGA.h"
@@ -11,15 +12,19 @@
 #define ORANGE_RADIUS 1.0f
 
 const int TABLE_SQUARE = 0;
-const int ORANGE = 2;
-const int BUTTER = 3;
-const int CAR_BODY = 4;
-const int CAR_WHEEL = 5;
-const int CHEERIO = 6;
-const int Windows = 7;
-const int CAR_HEADLIGHT = 8;
-const int CAR_TAILIGHT = 9;
-const int CANDLE_STICK = 10;
+const int ORANGE = 1;
+const int BUTTER = 2;
+const int CAR_BODY = 3;
+const int CAR_WHEEL = 4;
+const int CHEERIO = 5;
+const int Windows = 6;
+const int CAR_HEADLIGHT = 7;
+const int CAR_TAILIGHT = 8;
+const int CANDLE_STICK = 9;
+const int TREE_QUAD = 10;
+const int PARTICLE_QUAD = 11;
+const int LENSFLARE_QUAD = 12;
+const int SUN_QUAD = 13;
 
 const int AMBIENT_LIGHT = 0;
 const int CANDLE_0 = 1;
@@ -31,7 +36,10 @@ const int CANDLE_5 = 6;
 const int CAR_HEADLIGHT_LEFT = 7;
 const int CAR_HEADLIGHT_RIGHT = 8;
 
-struct MyMesh mesh[13];
+const float flareScale = 0.2;
+const float flareMaxSize = 0.5;
+
+struct MyMesh mesh[14];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -69,18 +77,25 @@ void GameManager::init(void)
 	tableZMin = -3.0f;
 	tableZMax = 63.0f;
 	carStartPos = Vector3(28.7, 1.15f, 6.1f);
+	sunPos = Vector3(-20.0f, 15.0f, 20.0f);
 	camX = camY = camZ = 0;
 
 	_car = new Car(carStartPos);
 	_car->setDirection(1.0f, 0.0f, 0.0f);
 
-	glGenTextures(5, TextureArray);
+	glGenTextures(11, TextureArray);
 
 	TGA_Texture(TextureArray, "textures/test.tga", 0);
 	TGA_Texture(TextureArray, "textures/lightwood.tga", 1);
 	TGA_Texture(TextureArray, "textures/fonts/font1.tga", 2);
 	TGA_Texture(TextureArray, "textures/tree.tga", 3);
-	TGA_Texture(TextureArray, "textures/firework_particle.tga", 4);
+	TGA_Texture(TextureArray, "textures/particle2.tga", 4);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare1.tga", 5);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare2.tga", 6);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare3.tga", 7);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare4.tga", 8);
+	TGA_Texture(TextureArray, "textures/lens_flare/Sun.tga", 9);
+	TGA_Texture(TextureArray, "textures/lens_flare/SunLight.tga", 10);
 
 	_fontSize = 16;
 
@@ -94,12 +109,15 @@ void GameManager::init(void)
 	initTextureMappedFont();
 	createTreeSquare();
 	createParticleQuad();
+	createSunQuad();
+	createLensFlareQuad();
 
 	// Cameras
 	_cameraLook = 1;
 	_orthogonalCamera = new OrthogonalCamera(-3.0, 63.0, -3.0, 63.0, -10.0, 10.0);
 	_perspectiveTop = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
 	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
+	_flaresCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_activeCamera = _orthogonalCamera;
 
@@ -109,7 +127,8 @@ void GameManager::init(void)
 	_fogDensity = 0.075f;
 	_fogMode = 1;
 
-	createParticles(100);
+	createParticles(1000);
+	flareInit(8);
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
@@ -175,7 +194,7 @@ void GameManager::renderScene(void)
 	
 	else { // Camara do carro
 		loadIdentity(PROJECTION);
-		perspective(53.13f, 1.0f, 0.1f, 1000.0f);
+		perspective(70.13f, 1.0f, 0.001f, 100.0f);
 		loadIdentity(VIEW);
 		loadIdentity(MODEL);
 		Vector3 direction = _car->getDirection();
@@ -183,6 +202,8 @@ void GameManager::renderScene(void)
 				_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ(),
 				0, 1, 0);
 		//printDebugCameras();
+		_perspectiveBehind->setPosition(_car->getPosition().getX() - 2 * direction.getX(), _car->getPosition().getY() + 1, _car->getPosition().getZ() - 2 * direction.getZ());
+		_perspectiveBehind->setDirection(_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ());
 	}
 
 	// use our shader
@@ -212,6 +233,24 @@ void GameManager::renderScene(void)
 
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[4]);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[5]);
+
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[6]);
+
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[7]);
+
+	glActiveTexture(GL_TEXTURE8);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[8]);
+
+	glActiveTexture(GL_TEXTURE9);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[9]);
+
+	glActiveTexture(GL_TEXTURE10);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[10]);
 
 	glUniform1i(particleMode, 0);
 
@@ -247,6 +286,24 @@ void GameManager::renderScene(void)
 		drawParticleQuad();
 		glUniform1i(particleMode, 0);
 	}
+
+	if (_lights[AMBIENT_LIGHT]->getState()) {
+		glUniform1i(particleMode, 1);
+		glUniform1i(sun, 1);
+		glUniform1i(tex_loc_1, 9);
+		glUniform1i(tex_loc_2, 10);
+		drawSunQuad();
+		glUniform1i(sun, 0);
+		glUniform1i(particleMode, 0);
+		glUniform1i(flares, 1);
+		glUniform1i(vWriteMode, 1);
+		glUniform1i(tex_loc_1, 5);
+		_flaresCamera->computeProjection();
+		drawLensFlareQuad();
+		glUniform1i(flares, 0);
+		glUniform1i(particleMode, 0);
+	}
+
 	glUniform1i(writeMode, 1);
 	glUniform1i(vWriteMode, 1);
 	_scoreCamera->computeProjection();
@@ -492,7 +549,7 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
-	std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
+	//std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
 	if (_car->getPosition().getX() > tableXMax || _car->getPosition().getX() < tableXMin || _car->getPosition().getZ() > tableZMax || _car->getPosition().getZ() < tableZMin) {
 		_lives -= 1;
 		_car = new Car(carStartPos);
@@ -691,7 +748,7 @@ void GameManager::processMouseButtons(int button, int state, int xx, int yy)
 void GameManager::processMouseMotion(int xx, int yy) 
 {
 	int deltaX, deltaY;
-	float alphaAux, betaAux;
+	float alphaAux = 1, betaAux = 1;
 	float rAux;
 
 	deltaX =  - xx + startX;
@@ -709,7 +766,12 @@ void GameManager::processMouseMotion(int xx, int yy)
 		else if (betaAux < -85.0f)
 			betaAux = -85.0f;
 		rAux = r;
+
+		camX = rAux * sin(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
+		camZ = rAux * cos(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
+		camY = rAux *   						       sin(betaAux * 3.14f / 180.0f);
 	}
+	/*
 	// right mouse button: zoom
 	else if (tracking == 2) {
 
@@ -719,10 +781,8 @@ void GameManager::processMouseMotion(int xx, int yy)
 		if (rAux < 0.1f)
 			rAux = 0.1f;
 	}
-
-	camX = rAux * sin(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camZ = rAux * cos(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camY = rAux *   						       sin(betaAux * 3.14f / 180.0f);
+	*/
+	
 
 //  uncomment this if not using an idle func
 //	glutPostRedisplay();
@@ -779,6 +839,8 @@ GLuint GameManager::setupShaders(void)
 	fogColor = glGetUniformLocation(shader.getProgramIndex(), "fogColor");
 	fogDensity = glGetUniformLocation(shader.getProgramIndex(), "fogDensity");
 	particleMode = glGetUniformLocation(shader.getProgramIndex(), "particleMode");
+	sun = glGetUniformLocation(shader.getProgramIndex(), "sun");
+	flares = glGetUniformLocation(shader.getProgramIndex(), "flares");
 	
 	printf("InfoLog for Hello World Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -1692,9 +1754,6 @@ void GameManager::initTextureMappedFont() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, &texCoords[0], GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(VERTEX_ATTRIB2);
 	glVertexAttribPointer(VERTEX_ATTRIB2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	//set the orthographic projection matrix
-	//ortho(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 }
 
 
@@ -1707,6 +1766,7 @@ void GameManager::DrawString(float x, float y, const std::string& str) {
 	float texCoords[8];
 
 	pushMatrix(MODEL);
+	
 	translate(MODEL, x, y, 0.0f);
 	glBindVertexArray(_vaoID);
 	// glTranslatef(x, y, 0.0); //Position our text
@@ -1753,7 +1813,7 @@ void GameManager::createTreeSquare() {
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float shininess = 0.25f;
 	int texcount = 0;
-	objId = 11;
+	objId = TREE_QUAD;
 
 	memcpy(mesh[objId].mat.ambient, amb, 4 * sizeof(float));
 	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
@@ -1767,7 +1827,7 @@ void GameManager::createTreeSquare() {
 
 void GameManager::drawTreeSquare() {
 	GLint loc;
-	objId = 11;
+	objId = TREE_QUAD;
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
 	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
@@ -1966,7 +2026,7 @@ void GameManager::iterate() {
 
 void GameManager::createParticleQuad() {
 	int texcount = 0;
-	objId = 12;
+	objId = PARTICLE_QUAD;
 
 	mesh[objId].mat.texCount = texcount;
 	createQuad(0.3f, 0.3f);
@@ -1974,7 +2034,7 @@ void GameManager::createParticleQuad() {
 
 void GameManager::drawParticleQuad() {
 	GLint loc;
-	objId = 12;
+	objId = PARTICLE_QUAD;
 	int nPDone = 0;
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	glDisable(GL_DEPTH_TEST);
@@ -1993,7 +2053,7 @@ void GameManager::drawParticleQuad() {
 
 			pushMatrix(MODEL);
 			translate(MODEL, (*i).getPosition().getX(), (*i).getPosition().getY(), (*i).getPosition().getZ());
-			//billboardRotation((*i).getPosition().getX(), (*i).getPosition().getY(), (*i).getPosition().getZ());
+			billboardRotation((*i).getPosition().getX(), (*i).getPosition().getY(), (*i).getPosition().getZ());
 
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -2013,4 +2073,234 @@ void GameManager::drawParticleQuad() {
 	}
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+void GameManager::createLensFlareQuad() {
+	float quadSize = 20.0f;
+	float vertices[] = {
+		0.0f, 0.0f,
+		quadSize, 0.0f,
+		quadSize, quadSize,
+		0.0f, quadSize
+	};
+
+	glGenVertexArrays(1, &_vaoFlareID);
+	glBindVertexArray(_vaoFlareID);
+	glGenBuffers(1, &_fvertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _fvertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, &vertices[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(VERTEX_ATTRIB1);
+	glVertexAttribPointer(VERTEX_ATTRIB1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		//Just initialize with something for now, the tex coords are updated
+		//for each character printed
+		float texCoords[] = {
+		0.0f, 0.0f,
+		0.0f, 0.0f,
+		0.0f, 0.0f,
+		0.0f, 0.0f
+	};
+
+	glGenBuffers(1, &_ftexCoordBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _ftexCoordBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8, &texCoords[0], GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(VERTEX_ATTRIB2);
+	glVertexAttribPointer(VERTEX_ATTRIB2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+}
+
+void GameManager::createSunQuad() {
+	float diff[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float shininess = 0.25f;
+	int texcount = 0;
+	objId = SUN_QUAD;
+
+	memcpy(mesh[objId].mat.diffuse, diff, 4 * sizeof(float));
+	mesh[objId].mat.shininess = shininess;
+	mesh[objId].mat.texCount = texcount;
+	createQuad(3.0f, 3.0f);
+	//createSquare();
+}
+
+void GameManager::drawLensFlareQuad() {
+	/*
+	
+	for (int i = 0; i < _flare.size(); i++) {
+		glUniform1i(tex_loc_1, _flare[i].getTextureIndice());
+		px = (1.0f - _flare[i].getDistance())*lx + _flare[i].getDistance()*dx;
+		py = (1.0f - _flare[i].getDistance())*ly + _flare[i].getDistance()*dy;
+
+		width = (flaredist * flarescale * _flare[i].getSize()) / maxflaredist;
+		if (width > flaremaxsize)
+			width = flaremaxsize;
+		height = (320 * width*WinY) / (240 * WinX);
+		if (width > 1) {
+			pushMatrix(MODEL);
+
+			translate(MODEL, px - width / 2, py - height / 2, 0.0f);
+			scale(MODEL, width, height, 1.0f);
+
+			computeDerivedMatrix(PROJ_VIEW_MODEL);
+
+			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+			computeNormalMatrix3x3();
+			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+			// Render mesh
+			glBindVertexArray(mesh[objId].vao);
+			glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			popMatrix(MODEL);
+		}
+	}*/
+
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	float lx = sun_pos_x, ly = sun_pos_y;
+	float cx = WinX / 2, cy = WinY / 2;
+	float     dx, dy;          // Screen coordinates of "destination"
+	float     px, py;          // Screen coordinates of flare element
+	float     maxflaredist, flaredist, flaremaxsize, flarescale;
+	float     width, height, alpha;    // Piece parameters;
+	float     i;
+
+	maxflaredist = sqrt(cx*cx + cy*cy);
+	flaredist = sqrt((lx - cx)*(lx - cx) + (ly - cy)*(ly - cy));
+	flaredist = maxflaredist - flaredist;
+	flaremaxsize = WinX * flareMaxSize;
+	flarescale = WinX * flareScale;
+
+	dx = cx + (cx - lx);
+	dy = cy + (cy - ly);
+
+	float texCoords[8] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f
+	};
+
+	//translate(MODEL, 500, 300, 0.0f);
+	//scale(MODEL, 10, 10, 1);
+	glBindVertexArray(_vaoFlareID);
+	glBindBuffer(GL_ARRAY_BUFFER, _ftexCoordBuffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, &texCoords[0]);
+	for (int i = 0; i < _flare.size(); i++) {
+		glUniform1i(tex_loc_1, _flare[i].getTextureIndice());
+		px = (1.0f - _flare[i].getDistance())*lx + _flare[i].getDistance()*dx;
+		py = (1.0f - _flare[i].getDistance())*ly + _flare[i].getDistance()*dy;
+
+		width = (flaredist * flarescale * _flare[i].getSize()) / maxflaredist;
+		if (width > flaremaxsize)
+			width = flaremaxsize;
+		height = (320 * width*WinY) / (240 * WinX);
+		if (width > 1) {
+			pushMatrix(MODEL);
+
+			translate(MODEL, px - width / 2, py - height / 2, 0.0f);
+			scale(MODEL, width, height, 1.0f);
+
+			computeDerivedMatrix(PROJ_VIEW_MODEL);
+			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+
+			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			popMatrix(MODEL);
+		}
+		
+	}
+	glBindVertexArray(0);
+	
+
+	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+
+}
+
+void GameManager::drawSunQuad() {
+	GLint loc;
+	objId = SUN_QUAD;
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	//glDisable(GL_DEPTH_TEST);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+
+	pushMatrix(MODEL);
+
+	translate(MODEL, sunPos.getX(), sunPos.getY(), sunPos.getZ());
+	billboardRotation(sunPos.getX(), sunPos.getY(), sunPos.getZ());
+	scale(MODEL, 5.0f, 5.0f, 5.0f);
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	float sunp[4] = { sunPos.getX(), sunPos.getY(), sunPos.getZ(), 1.0f };
+	float view[16];
+	float projection[16];
+	double viewd[16];
+	double projd[16];
+	double winx, winy, winz;
+	int viewp[4];
+
+	memcpy(view, mMatrix[VIEW], 16 * sizeof(float));
+	memcpy(projection, mMatrix[PROJECTION], 16 * sizeof(float));
+
+	for (int i = 0; i < 16; i++) {
+		viewd[i] = (double)view[i];
+		projd[i] = (double)projection[i];
+	}
+	glGetIntegerv(GL_VIEWPORT, viewp);
+	gluProject(sunp[0], sunp[1], sunp[2], viewd, projd, viewp, &winx, &winy, &winz);
+	sun_pos_x = winx;
+	sun_pos_y = winy;
+
+	// Render mesh
+	glBindVertexArray(mesh[objId].vao);
+	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+
+	//glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void GameManager::flareInit(int nFlares) {
+	float FracDist = 1.0f / (float)(nFlares - 1);
+	float dist;
+
+	dist = (FracDist * 0) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
+
+	dist = (FracDist * 1) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
+
+	dist = (FracDist * 2) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 7));
+
+	dist = (FracDist * 3) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
+
+	dist = (FracDist * 4) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 5));
+
+	dist = (FracDist * 5) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 6));
+
+	dist = (FracDist * 6) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 7));
+
+	dist = (FracDist * 7) + flareRange(0, FracDist);
+	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, dist, flareRange(0.6f, 1.0f)*((float)fabs(1.0f - 2 * dist)), 8));
+}
+
+float GameManager::flareRange(float a, float b) {
+	return ((float)(rand() & 0xffffff) / (float)0xfffffe)*(b - a) + a;
 }

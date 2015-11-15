@@ -27,6 +27,7 @@
 #include "ButterPacket.h"
 #include "Cheerio.h"
 #include "Particle.h"
+#include "Flare.h"
 
 class GameManager {
 	public:
@@ -63,6 +64,7 @@ class GameManager {
 		float tableZMin;
 		float tableZMax;
 		Vector3 carStartPos;
+		Vector3 sunPos;
 
 		bool _paused = false;
 		bool _gameOver = false;
@@ -74,6 +76,7 @@ class GameManager {
 		double _delta_t;
 		double _elap;
 		float _fogColor[3], _fogDensity;
+		float sun_pos_x, sun_pos_y;
 		int _fogMode = 1;
 
 		Car* _car;
@@ -88,8 +91,10 @@ class GameManager {
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
 		OrthogonalCamera* _orthogonalCamera;
+		OrthogonalCamera* _flaresCamera;
 		OrthogonalCamera* _scoreCamera;
 
+		std::vector<FlareElement> _flare;
 		std::vector<LightSource*> _lights;
 
 		VSShaderLib shader;
@@ -107,14 +112,15 @@ class GameManager {
 		GLint vWriteMode;
 		GLint texMode;
 		GLint fogState, fogMode, fogColor, fogDensity;
-		GLint particleMode;
+		GLint particleMode, sun, flares;
 
-		GLuint TextureArray[5];
-		GLuint _vaoID;
+		GLuint TextureArray[11];
+		GLuint _vaoID, _vaoFlareID;
 		GLuint treeID;
 
-		GLuint _texCoordBuffer;
-		GLuint _vertexBuffer;
+		GLuint _texCoordBuffer, _ftexCoordBuffer;
+		GLuint _vertexBuffer, _fvertexBuffer;
+
 		float _fontSize;
 		// Camera Position
 		float camX, camY, camZ;
@@ -146,6 +152,8 @@ class GameManager {
 		void createCandleSticks(void);
 		void createTreeSquare(void);
 		void createParticleQuad(void);
+		void createLensFlareQuad(void);
+		void createSunQuad(void);
 
 		void drawTable(void);
 		void drawOranges(void);
@@ -155,6 +163,8 @@ class GameManager {
 		void drawCandleSticks(void);
 		void drawTreeSquare(void);
 		void drawParticleQuad(void);
+		void drawLensFlareQuad(void);
+		void drawSunQuad(void);
 
 		void setUpLights(void);
 		void update(double delta_t);
@@ -172,6 +182,8 @@ class GameManager {
 		float frand();
 		float frand(float min, float max);
 		void updateParticles(float delta_t);
+		void flareInit(int nFlares);
+		float flareRange(float a, float b);
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);
 		void normalize(float* v);

@@ -315,7 +315,6 @@ void GameManager::renderScene(void)
 
 	s = "Lives:" + std::to_string(_lives);
 	DrawString(635, 580, s);
-	DrawString(sun_pos_x-20, sun_pos_y-5, "sun");
 	_fontSize = 25;
 	if (_paused) {
 		DrawString(345, 280, "Paused!");

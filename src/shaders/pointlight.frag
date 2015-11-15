@@ -160,8 +160,8 @@ void main() {
 		else {
 			vec4 col = vec4(1,1,1,1);
 			colorOut = texture(texmap1, tex_coord)*col;
-			/*if (colorOut.rgb == vec3(0.0))
-				discard;*/
+			if (colorOut.rgb == vec3(0.0))
+				discard;
 		}
 	}
 	else {
@@ -174,7 +174,9 @@ void main() {
 				discard;
 		}
 		else if (flare) {
-
+			colorOut = texture(texmap1, tex_coord) * mat.diffuse;
+			if (colorOut.a < 0.01)
+				discard;
 		}
 		else {
 			vec4 tex = texture(texmap1, tex_coord);

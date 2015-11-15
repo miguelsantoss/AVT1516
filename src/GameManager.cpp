@@ -40,7 +40,7 @@ const int CAR_HEADLIGHT_RIGHT = 8;
 const float flareScale = 0.2;
 const float flareMaxSize = 0.5;
 
-struct MyMesh mesh[14];
+struct MyMesh mesh[15];
 int objId = 0; //id of the object mesh - to be used as index of mesh: mesh[objID] means the current mesh
 
 //External array storage defined in AVTmathLib.cpp
@@ -255,7 +255,7 @@ void GameManager::renderScene(void)
 	glActiveTexture(GL_TEXTURE10);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[10]);
 
-	glActiveTexture(GL_TEXTURE10);
+	glActiveTexture(GL_TEXTURE11);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[11]);
 
 	glUniform1i(particleMode, 0);
@@ -274,6 +274,7 @@ void GameManager::renderScene(void)
 	glDepthMask(GL_TRUE);
 	glUniform1i(texMode, 2);
 	glUniform1i(tex_loc_1, 11);
+
 	glEnable(GL_STENCIL_TEST);
 
 		// Draw floor
@@ -284,6 +285,7 @@ void GameManager::renderScene(void)
 		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
 		glEnable(GL_CULL_FACE);
 		drawMilk();
+		//drawTable();
 		glDisable(GL_CULL_FACE);
 		// Draw cube reflection
 		glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
@@ -891,9 +893,6 @@ void GameManager::createTable(void) {
 	float amb[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float diff[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float spec[] = { 0.94f, 0.94f, 0.94f, 1.0f };
-	/*float amb[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float diff[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float spec[] = { 0.0f, 0.0f, 0.0f, 1.0f };*/
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float shininess = 100.0f;
 	int texcount = 0;
@@ -909,12 +908,9 @@ void GameManager::createTable(void) {
 }
 
 void GameManager::createMilk(void) {
-	/*float amb[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	float diff[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	float spec[] = { 1.0f, 1.0f, 1.0f, 1.0f };*/
-	float amb[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	float diff[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	float spec[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float amb[] = { 0.94f, 0.94f, 0.94f, 1.0f };
+	float diff[] = { 0.94f, 0.94f, 0.94f, 1.0f };
+	float spec[] = { 0.94f, 0.94f, 0.94f, 1.0f };
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float shininess = 100.0f;
 	int texcount = 0;
@@ -1108,8 +1104,10 @@ void GameManager::createCandleSticks(void) {
 void GameManager::drawMilk(void) {
 	GLint loc;
 	objId = MILK_SQUARE;
-	float x[6] = {12.0f, 12.0f, 45.0f, 50.0f, 45.0f, 35.0f  };
+
+	float x[6] = {12.0f, 12.0f, 45.0f, 50.0f, 45.0f, 35.0f};
 	float z[6] = {10.0f, 50.0f, 30.0f, 10.0f, 50.0f, 53.0f};
+
 	for (int i = 0; i < 6; i++) {
 		// send the material
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
@@ -1121,7 +1119,7 @@ void GameManager::drawMilk(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 		glUniform1f(loc, mesh[objId].mat.shininess);
 		pushMatrix(MODEL);
-		translate(MODEL, x[i], 1.5f, z[i]);
+		translate(MODEL, x[i], 1.001f, z[i]);
 		rotate(MODEL, 90, -1.0, 0.0, 0.0);
 		// send matrices to OGL
 		computeDerivedMatrix(PROJ_VIEW_MODEL);

@@ -44,6 +44,8 @@ uniform bool useLights;
 uniform bool writingMode;
 uniform bool particleMode;
 uniform int texMode;
+uniform bool sun;
+uniform bool flare;
 
 uniform int fogState;
 uniform int fogMode;
@@ -152,19 +154,34 @@ void main() {
 				frag_rgb = colorFogFunction(frag_rgb, Position.xyz);
 			}
 			colorOut = vec4(frag_rgb, mat.diffuse.a*tex.a);
-			if (tex.a == 0)
+			if (tex.a < 0.01)
 				discard;
 		}
 		else {
 			vec4 col = vec4(1,1,1,1);
 			colorOut = texture(texmap1, tex_coord)*col;
-			if (colorOut.rgb == vec3(0.0))
-				discard;
+			/*if (colorOut.rgb == vec3(0.0))
+				discard;*/
 		}
 	}
 	else {
-		vec4 tex = texture(texmap1, tex_coord);
-		colorOut = tex * mat.diffuse;
+		if (sun) {
+			vec4 texel = texture(texmap1, tex_coord);
+			vec4 texel1 = texture(texmap2, tex_coord);
+			vec4 tex = texel * texel1;
+			colorOut = tex * mat.diffuse;
+			if (colorOut.a < 0.01)
+				discard;
+		}
+		else if (flare) {
+
+		}
+		else {
+			vec4 tex = texture(texmap1, tex_coord);
+			colorOut = tex * mat.diffuse * 2;
+			if (tex.a == 0)
+				discard;
+		}
 	}
 	
 }

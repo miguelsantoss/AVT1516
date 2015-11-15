@@ -2124,7 +2124,7 @@ void GameManager::createSunQuad() {
 
 void GameManager::drawLensFlareQuad() {
 	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+	glBlendFunc(GL_ONE, GL_ONE);
 	float lx = sun_pos_x, ly = sun_pos_y;
 	float cx = WinX / 2, cy = WinY / 2;
 	float     dx, dy;          // Screen coordinates of "destination"

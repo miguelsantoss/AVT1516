@@ -114,7 +114,7 @@ class GameManager {
 		GLint fogState, fogMode, fogColor, fogDensity;
 		GLint particleMode, sun, flares;
 
-		GLuint TextureArray[11];
+		GLuint TextureArray[12];
 		GLuint _vaoID, _vaoFlareID;
 		GLuint treeID;
 

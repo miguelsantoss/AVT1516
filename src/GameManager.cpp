@@ -589,7 +589,7 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
-	//std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
+	std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
 	if (_car->getPosition().getX() > tableXMax || _car->getPosition().getX() < tableXMin || _car->getPosition().getZ() > tableZMax || _car->getPosition().getZ() < tableZMin) {
 		_lives -= 1;
 		_car = new Car(carStartPos);
@@ -1732,7 +1732,6 @@ void GameManager::drawOranges(void) {
 		angle = _oranges[i].getAngle();
 		angle += _oranges[i].getDistanceDone() / circumference * 360;
 		_oranges[i].setDistanceDone(0);
-		//std::cout << "test: " << angle << std::endl;
 		_oranges[i].setAngle(angle);
 		float normalized = _oranges[i].getSpeed().getX() * _oranges[i].getSpeed().getX() + _oranges[i].getSpeed().getZ() * _oranges[i].getSpeed().getZ();
 		normalized = sqrt(normalized);
@@ -2278,72 +2277,40 @@ void GameManager::drawTreeSquare() {
 	GLint loc;
 	objId = TREE_QUAD;
 
-	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-	glUniform4fv(loc, 1, mesh[objId].mat.ambient);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-	glUniform4fv(loc, 1, mesh[objId].mat.specular);
-	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-	glUniform1f(loc, mesh[objId].mat.shininess);
+	float x[] = { 38.4f, 49.6f, 31.4f, 18.7f, 36.6f, 48.1f, 31.4f, 10.0f, 7.2f, 28.2f, 14.8f, 14.8f };
+	float z[] = { 10.9f, 19.9f, 25.1f, 13.0f, 25.7f, 48.2f, 45.8f, 57.0f, 43.9f, 31.1f, 21.8f, 1.6f };
+	int nTrees = sizeof(x) / sizeof(float);
 
-	pushMatrix(MODEL);
-	
-	translate(MODEL, 10.0f, 2.5f, 10.0f);
-	billboardRotation(10.0f, 2.5f, 10.0f);
+	for (int i = 0; i < nTrees; i++) {
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, mesh[objId].mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, mesh[objId].mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, mesh[objId].mat.shininess);
 
-	
-	// send matrices to OGL
-	computeDerivedMatrix(PROJ_VIEW_MODEL);
+		pushMatrix(MODEL);
 
-	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-	computeNormalMatrix3x3();
-	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-	// Render mesh
-	glBindVertexArray(mesh[objId].vao);
-	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	popMatrix(MODEL);
-	
-	pushMatrix(MODEL);
-	translate(MODEL, 5.0f, 2.5f, 15.0f);
-	billboardRotation(5.0f, 2.5f, 15.0f);
+		translate(MODEL, x[i], 2.5f, z[i]);
+		billboardRotation(x[i], 2.5f, z[i]);
 
 
-	// send matrices to OGL
-	computeDerivedMatrix(PROJ_VIEW_MODEL);
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
 
-	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-	computeNormalMatrix3x3();
-	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
 
-	// Render mesh
-	glBindVertexArray(mesh[objId].vao);
-	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	popMatrix(MODEL);
-
-	pushMatrix(MODEL);
-	translate(MODEL, 15.0f, 2.5f, 5.0f);
-	billboardRotation(15.0f, 2.5f, 5.0f);
-
-
-	// send matrices to OGL
-	computeDerivedMatrix(PROJ_VIEW_MODEL);
-
-	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-	computeNormalMatrix3x3();
-	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-	// Render mesh
-	glBindVertexArray(mesh[objId].vao);
-	glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	popMatrix(MODEL);
+		// Render mesh
+		glBindVertexArray(mesh[objId].vao);
+		glDrawElements(mesh[objId].type, mesh[objId].numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		popMatrix(MODEL);
+	}
 }
 
 void GameManager::billboardRotation(float objPosX, float objPosY, float objPosZ) {
@@ -2640,9 +2607,6 @@ void GameManager::drawLensFlareQuad() {
 			color[1] = _flare[i].getColor().getY();
 			color[2] = _flare[i].getColor().getZ();
 			color[3] = _flare[i].getColor().getW() * distscale * distscale;
-			
-			//std::cout << "pos flare " << "x: " << px << " y: " << py << std::endl;
-			std::cout << "size flare " << "x: " << width << " y: " << height << std::endl;
 
 			glUniform4fv(glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse"), 1, color);
 			translate(MODEL, px - width / 2, py - height / 2, 0.0f);

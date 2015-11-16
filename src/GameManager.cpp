@@ -86,19 +86,19 @@ void GameManager::init(void)
 
 	glGenTextures(12, TextureArray);
 
+	
 	TGA_Texture(TextureArray, "textures/test.tga", 0);
 	TGA_Texture(TextureArray, "textures/lightwood.tga", 1);
 	TGA_Texture(TextureArray, "textures/fonts/font1.tga", 2);
 	TGA_Texture(TextureArray, "textures/tree.tga", 3);
 	TGA_Texture(TextureArray, "textures/particle2.tga", 4);
-	TGA_Texture(TextureArray, "textures/lens_flare/Flare1.tga", 5);
-	TGA_Texture(TextureArray, "textures/lens_flare/Flare2.tga", 6);
-	TGA_Texture(TextureArray, "textures/lens_flare/Flare3.tga", 7);
-	TGA_Texture(TextureArray, "textures/lens_flare/Flare4.tga", 8);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare1alphatest.tga", 5);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare2alphatest.tga", 6);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare3alphatest.tga", 7);
+	TGA_Texture(TextureArray, "textures/lens_flare/Flare4alphatest.tga", 8);
 	TGA_Texture(TextureArray, "textures/lens_flare/Sun.tga", 9);
-	TGA_Texture(TextureArray, "textures/lens_flare/SunLight.tga", 10);
+	TGA_Texture(TextureArray, "textures/lens_flare/SunLightalphatest.tga", 10);
 	TGA_Texture(TextureArray, "textures/milk.tga", 11);
-
 	_fontSize = 16;
 
 	createLights();
@@ -124,10 +124,19 @@ void GameManager::init(void)
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_activeCamera = _orthogonalCamera;
 
-	_fogColor[0] = 0.16f;
-	_fogColor[1] = 0.62f;
-	_fogColor[2] = 0.77f;
-	_fogDensity = 0.075f;
+	_fogColorDay[0] = 0.46f;
+	_fogColorDay[1] = 0.82f;
+	_fogColorDay[2] = 0.97f;
+
+	_fogColorNight[0] = 0.0f;
+	_fogColorNight[1] = 0.06f;
+	_fogColorNight[2] = 0.16f;
+
+	_fogColor[0] = _fogColorNight[0];
+	_fogColor[1] = _fogColorNight[1];
+	_fogColor[2] = _fogColorNight[2];
+
+	_fogDensity = 0.077f;
 	_fogMode = 1;
 
 	createParticles(1000);
@@ -139,7 +148,7 @@ void GameManager::init(void)
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(_fogColor[0], _fogColor[1], _fogColor[2], 1.0f);
+	glClearColor(_fogColorNight[0], _fogColorNight[1], _fogColorNight[2], 1.0f);
 }
 
 void GameManager::restartGame() {
@@ -184,6 +193,19 @@ void GameManager::renderScene(void)
 
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (_lights[AMBIENT_LIGHT]->getState()) {
+		glClearColor(_fogColorDay[0], _fogColorDay[1], _fogColorDay[2], 1.0f);
+		_fogColor[0] = _fogColorDay[0];
+		_fogColor[1] = _fogColorDay[1];
+		_fogColor[2] = _fogColorDay[2];
+	}
+	else {
+		glClearColor(_fogColorNight[0], _fogColorNight[1], _fogColorNight[2], 1.0f);
+		_fogColor[0] = _fogColorNight[0];
+		_fogColor[1] = _fogColorNight[1];
+		_fogColor[2] = _fogColorNight[2];
+	}
+
 	// load identity matrices
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
@@ -589,7 +611,7 @@ void GameManager::destroyCar() {
 void GameManager::update(double delta_t) {
 	if (_paused || _gameOver) { glutPostRedisplay(); return; }
 	_car->update(_delta_t);
-	std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
+	//std::cout << "car_pos " << _car->getPosition().getX() << "  " << _car->getPosition().getY() << "  " << _car->getPosition().getZ() << std::endl;
 	if (_car->getPosition().getX() > tableXMax || _car->getPosition().getX() < tableXMin || _car->getPosition().getZ() > tableZMax || _car->getPosition().getZ() < tableZMin) {
 		_lives -= 1;
 		_car = new Car(carStartPos);
@@ -811,17 +833,11 @@ void GameManager::processMouseMotion(int xx, int yy)
 		camZ = rAux * cos(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
 		camY = rAux *   						       sin(betaAux * 3.14f / 180.0f);
 	}
-	/*
+	
 	// right mouse button: zoom
 	else if (tracking == 2) {
-
-		alphaAux = alpha;
-		betaAux = beta;
-		rAux = r + (deltaY * 0.01f);
-		if (rAux < 0.1f)
-			rAux = 0.1f;
+		camX = camY = camZ = 0;
 	}
-	*/
 	
 
 //  uncomment this if not using an idle func
@@ -2540,7 +2556,6 @@ void GameManager::createSunQuad() {
 
 void GameManager::drawLensFlareQuad() {
 	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_ONE, GL_ONE);
 	float lx = sun_pos_x, ly = sun_pos_y;
 	float cx = WinX / 2, cy = WinY / 2;
 	float     dx, dy;          // Screen coordinates of "destination"
@@ -2622,7 +2637,6 @@ void GameManager::drawLensFlareQuad() {
 	glBindVertexArray(0);
 
 	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GameManager::drawSunQuad() {
@@ -2683,13 +2697,13 @@ void GameManager::drawSunQuad() {
 void GameManager::flareInit(int nFlares) {
 	float FracDist = 1.0f / (float)(nFlares - 1);
 
-	_flare.push_back(FlareElement(1.0f, 1.0f, 0.0f, 1.0f, 0.01f, 900.0f, 5));
-	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.07f, 800.0f, 5));
-	_flare.push_back(FlareElement(1.0f, 0.0f, 1.0f, 1.0f, 0.10f, 800.0f, 7));
-	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.20f, 500.0f, 5));
-	_flare.push_back(FlareElement(0.0f, 1.0f, 1.0f, 1.0f, 0.30f, 700.0f, 5));
-	_flare.push_back(FlareElement(1.0f, 1.0f, 0.0f, 1.0f, 0.25f, 700.0f, 6));
-	_flare.push_back(FlareElement(1.0f, 0.0f, 1.0f, 1.0f, 0.35f, 500.0f, 7));
+	_flare.push_back(FlareElement(1.0f, 1.0f, 0.3f, 1.0f, 0.01f, 900.0f, 5));
+	_flare.push_back(FlareElement(0.3f, 1.0f, 1.0f, 1.0f, 0.07f, 800.0f, 5));
+	_flare.push_back(FlareElement(1.0f, 0.3f, 1.0f, 1.0f, 0.10f, 800.0f, 7));
+	_flare.push_back(FlareElement(0.3f, 1.0f, 1.0f, 1.0f, 0.20f, 500.0f, 5));
+	_flare.push_back(FlareElement(0.3f, 1.0f, 1.0f, 1.0f, 0.30f, 700.0f, 5));
+	_flare.push_back(FlareElement(1.0f, 1.0f, 0.3f, 1.0f, 0.25f, 700.0f, 6));
+	_flare.push_back(FlareElement(1.0f, 0.3f, 1.0f, 1.0f, 0.35f, 500.0f, 7));
 	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, 1.0f, 0.25f, 1000.0f, 8));
 }
 

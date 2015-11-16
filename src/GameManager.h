@@ -68,14 +68,14 @@ class GameManager {
 
 		bool _paused = false;
 		bool _gameOver = false;
-		bool _fogState = false;
+		bool _fogState = true;
 		bool _fireworks = false;
 		int _lives = 5;
 		long unsigned int _score = 0;
 		double _elapsed;
 		double _delta_t;
 		double _elap;
-		float _fogColor[3], _fogDensity;
+		float _fogColorDay[3], _fogColorNight[3], _fogColor[3], _fogDensity;
 		float sun_pos_x, sun_pos_y;
 		int _fogMode = 1;
 
@@ -190,7 +190,6 @@ class GameManager {
 		void updateParticles(float delta_t);
 		void flareInit(int nFlares);
 		float flareRange(float a, float b);
-		void loadFlareFile(char* filename);
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);
 		void normalize(float* v);

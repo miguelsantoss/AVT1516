@@ -90,6 +90,7 @@ class GameManager {
 		Camera* _activeCamera;
 		PerspectiveCamera* _perspectiveTop;
 		PerspectiveCamera* _perspectiveBehind;
+		PerspectiveCamera* _perspectiveInside;
 		OrthogonalCamera* _orthogonalCamera;
 		OrthogonalCamera* _flaresCamera;
 		OrthogonalCamera* _scoreCamera;
@@ -188,8 +189,7 @@ class GameManager {
 		float frand();
 		float frand(float min, float max);
 		void updateParticles(float delta_t);
-		void flareInit(int nFlares);
-		float flareRange(float a, float b);
+		void flareInit();
 
 		void billboardRotation(float objPosX, float objPosY, float objPosZ);
 		void normalize(float* v);

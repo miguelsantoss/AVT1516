@@ -119,7 +119,8 @@ void GameManager::init(void)
 	_cameraLook = 1;
 	_orthogonalCamera = new OrthogonalCamera(-3.0, 63.0, -3.0, 63.0, -10.0, 10.0);
 	_perspectiveTop = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
-	_perspectiveBehind = new PerspectiveCamera(53.13f, 1.0f, 0.1f, 1000.0f);
+	_perspectiveBehind = new PerspectiveCamera(73.13f, 1.0f, 0.1f, 1000.0f);
+	_perspectiveInside = new PerspectiveCamera(73.13f, 1.0f, 0.1f, 1000.0f);
 	_flaresCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_scoreCamera = new OrthogonalCamera(0.0f, float(WinX), 0.0f, float(WinY), -1.0f, 1.0f);
 	_activeCamera = _orthogonalCamera;
@@ -139,8 +140,8 @@ void GameManager::init(void)
 	_fogDensity = 0.077f;
 	_fogMode = 1;
 
-	createParticles(1000);
-	flareInit(8);
+	createParticles(500);
+	flareInit();
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
@@ -148,7 +149,7 @@ void GameManager::init(void)
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(_fogColorNight[0], _fogColorNight[1], _fogColorNight[2], 1.0f);
+	glClearColor(_fogColor[0], _fogColor[1], _fogColor[2], 1.0f);
 }
 
 void GameManager::restartGame() {
@@ -217,7 +218,7 @@ void GameManager::renderScene(void)
 		_activeCamera->computeProjectionMatrix();
 	}
 	
-	else { // Camara do carro
+	else if (_cameraLook == 3) { // Camara do carro
 		loadIdentity(PROJECTION);
 		perspective(70.13f, 1.0f, 0.001f, 100.0f);
 		loadIdentity(VIEW);
@@ -229,6 +230,19 @@ void GameManager::renderScene(void)
 		//printDebugCameras();
 		_perspectiveBehind->setPosition(_car->getPosition().getX() - 2 * direction.getX(), _car->getPosition().getY() + 1, _car->getPosition().getZ() - 2 * direction.getZ());
 		_perspectiveBehind->setDirection(_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ());
+	}
+	else {
+		loadIdentity(PROJECTION);
+		perspective(70.13f, 1.0f, 0.001f, 100.0f);
+		loadIdentity(VIEW);
+		loadIdentity(MODEL);
+		Vector3 direction = _car->getDirection();
+		lookAt(_car->getPosition().getX() + direction.getX() * 0.1, _car->getPosition().getY() + 0.3, _car->getPosition().getZ() + direction.getZ() * 0.1,
+			_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ(),
+			0, 1, 0);
+		//printDebugCameras();
+		_perspectiveInside->setPosition(_car->getPosition().getX() + direction.getX() * 0.1, _car->getPosition().getY() + 0.3, _car->getPosition().getZ() + direction.getZ() * 0.1);
+		_perspectiveInside->setDirection(_car->getPosition().getX() + 5 * direction.getX() - camX  * direction.getX(), _car->getPosition().getY() - camY, _car->getPosition().getZ() + 5 * direction.getZ() - camZ  * direction.getZ());
 	}
 
 	// use our shader
@@ -738,6 +752,11 @@ void GameManager::processKeys(unsigned char key, int xx, int yy)
 				_cameraLook = 3;
 			}
 			break;
+		case '4':
+			if (_cameraLook != 4) {
+				_cameraLook = 4;
+			}
+			break;
 		case 'n':
 			_lights[AMBIENT_LIGHT]->setState(!_lights[AMBIENT_LIGHT]->getState());
 			break;
@@ -1076,10 +1095,10 @@ void GameManager::createButterPackets(void) {
 
 void GameManager::createCheerios(void) {
 	float amb[] = { 0.0f,0.0f,0.0f,1.0f };
-	float diff[] = { 1.0f,0.0f,1.0f,1.0f };
-	float spec[] = { 1.0f,0.0f,1.0f,1.0f };
+	float diff[] = { 0.21f,0.11f,0.07f,1.0f };
+	float spec[] = { 0.37f,0.22f,0.16f,1.0f };
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float shininess = 34.0f;
+	float shininess = 76.8f;
 	int texcount = 0;
 	objId = CHEERIO;
 
@@ -2350,6 +2369,10 @@ void GameManager::billboardRotation(float objPosX, float objPosY, float objPosZ)
 		xcamX = _car->getPosition().getX() - 2 * direction.getX();
 		xcamZ = _car->getPosition().getZ() - 2 * direction.getZ();
 	}
+	else if (_cameraLook == 4) {
+		xcamX = _car->getPosition().getX() - direction.getX();
+		xcamZ = _car->getPosition().getZ() - direction.getZ();
+	}
 
 	objToCamProj[0] = xcamX - objPosX;
 	objToCamProj[1] = 0;
@@ -2644,7 +2667,7 @@ void GameManager::drawSunQuad() {
 	objId = SUN_QUAD;
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
 	glUniform4fv(loc, 1, mesh[objId].mat.diffuse);
@@ -2681,7 +2704,7 @@ void GameManager::drawSunQuad() {
 	gluProject(sunp[0], sunp[1], sunp[2], viewd, projd, viewp, &winx, &winy, &winz);
 	sun_pos_x = winx;
 	sun_pos_y = winy;
-	if (sun_pos_y <= 400)
+	if (sun_pos_y <= 300)
 		sun_pos_y = -500;
 
 	// Render mesh
@@ -2690,13 +2713,11 @@ void GameManager::drawSunQuad() {
 	glBindVertexArray(0);
 	popMatrix(MODEL);
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void GameManager::flareInit(int nFlares) {
-	float FracDist = 1.0f / (float)(nFlares - 1);
-
+void GameManager::flareInit() {
 	_flare.push_back(FlareElement(1.0f, 1.0f, 0.3f, 1.0f, 0.01f, 900.0f, 5));
 	_flare.push_back(FlareElement(0.3f, 1.0f, 1.0f, 1.0f, 0.07f, 800.0f, 5));
 	_flare.push_back(FlareElement(1.0f, 0.3f, 1.0f, 1.0f, 0.10f, 800.0f, 7));
@@ -2705,8 +2726,4 @@ void GameManager::flareInit(int nFlares) {
 	_flare.push_back(FlareElement(1.0f, 1.0f, 0.3f, 1.0f, 0.25f, 700.0f, 6));
 	_flare.push_back(FlareElement(1.0f, 0.3f, 1.0f, 1.0f, 0.35f, 500.0f, 7));
 	_flare.push_back(FlareElement(1.0f, 1.0f, 1.0f, 1.0f, 0.25f, 1000.0f, 8));
-}
-
-float GameManager::flareRange(float a, float b) {
-	return ((float)(rand() & 0xffffff) / (float)0xfffffe)*(b - a) + a;
 }
